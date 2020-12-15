@@ -9,7 +9,11 @@ The purpose of this software is to derive the optimal boundaries in the diphoton
 
 ## To Do
 
+- add multiprocessing for iterations > 100
+
 ## Features
+
+This code uses the scipy.optimize.minimize with the option to use a couple different minimization strategies.
 
 ## Getting Started
 

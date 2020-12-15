@@ -32,6 +32,8 @@ def main():
                         help='number of categories to optimize')
     parser.add_argument("--num_iter", default=10, type=int,
                         help='number of times to run the minimizer')
+    parser.add_argument("--method", default='series', type=str,
+                        help='method to use in minimization, options are "series" (default) or "parallel"')
                         
 
     args = parser.parse_args()
@@ -70,7 +72,7 @@ def main():
     data = pd.concat(files)
 
     #hand the data off the minimizer
-    bound_opt.minimize_target(data, args.num_bounds, args.num_iter)
+    bound_opt.minimize_target(data, args.num_bounds, args.num_iter,args.method)
     
 
 main()
