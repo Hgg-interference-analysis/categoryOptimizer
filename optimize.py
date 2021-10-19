@@ -19,6 +19,8 @@ import uproot as up
 import boundary_optimizer as bound_opt
 import plot
 
+import python.helpers.helper_optimize as helper_optimize
+
 ###############################################################################
 def main():
 
@@ -40,50 +42,20 @@ def main():
 
     args = parser.parse_args()
 
-    cmd = ''
-    for arg in sys.argv:
-        if ' ' in arg:
-            cmd += '"{}" '.format(arg)
-        else:
-            cmd +=  "{} ".format(arg)
+    helper_optimize.print_setup(sys.argv, args.inputFile)
 
-    print("#"*40)
-    print("[INFO] Welcome to the diphoton mva boundary optimizer")
-    print("[INFO] the command you ran was: {}".format(cmd))
-    print("[INFO] the specified config file is: {}".format(args.inputFile))
-
-    #columns needed for minimzation are hardcoded
-    keep_cols = ['DiphotonMVA','CMS_hgg_mass','leadEta','subleadEta','leadPt','subleadPt','lead_R9','sublead_R9','leadIDMVA','subleadIDMVA','decorrSigmaM','weight']
-    keep_cols_bkg = ['DiphotonMVA','CMS_hgg_mass','leadEta','subleadEta','leadPt','subleadPt','lead_R9','sublead_R9','leadIDMVA','subleadIDMVA','decorrSigmaM','weight','gen_lead_pt','gen_sublead_pt']
-    drop_cols = ['leadEta','subleadEta','leadPt','subleadPt','leadIDMVA','subleadIDMVA']
-    
-
-    #open and load the data
-    config = open(args.inputFile,'r').readlines()
-    config = [x.strip() for x in config]
-
-    files = []
-
-    for line in config:
-        line_list = line.split('\t')
-        print("[INFO] opening {} as dataframe".format(line_list[1]))
-        df = pd.DataFrame()
-        if line_list[0].find('Back') != -1 or line_list[0].find('back') != -1:
-            df = up.open(line_list[1])[line_list[0]].pandas.df(keep_cols_bkg)
-        else:
-            df = up.open(line_list[1])[line_list[0]].pandas.df(keep_cols)
-        #preselection
-        files.append(df)
+    df_collection_data = helper_optimize.extract_data(args.input_file)
 
     if args.xcheck:
-        plot.plot(files)
+        plot.plot(df_collection_data)
         return
         
-    data = pd.concat(files)
+    data = pd.concat(df_collection_data)
     data.drop(drop_cols,axis=1,inplace=True)
 
     #hand the data off the minimizer
     bound_opt.minimize_target(data, args.num_bounds, args.num_iter,args.method)
     
 
-main()
+if __name__ == "__main__":
+    main()

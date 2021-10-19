@@ -1,6 +1,6 @@
 # Diphoton MVA Optimizer
 
-This is repository containing a small framework to derive the optimal bdt category boundaries for the H to diphoton precision mass analysis
+This framework derives the optimal diphoton MVA boundaries
 
 ## Motivation
 
