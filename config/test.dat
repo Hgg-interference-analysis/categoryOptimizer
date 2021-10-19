@@ -1,1 +1,4 @@
-diphotonDumper/trees/ggh_125_13TeV_All	/eos/home-n/nschroed/output_flashgg_MVAcatOpt/mgg_125_combined.root
+diphotonDumper/trees/ggh_125_13TeV_All	/eos/home-n/nschroed/public/flashgg/ul17_test/ul17_signal_ggh125.root
+diphotonDumper/trees/vbf_125_13TeV_All	/eos/home-n/nschroed/public/flashgg/ul17_test/ul17_signal_vbf125.root
+diphotonDumper/trees/Background_13TeV_All	/eos/home-n/nschroed/public/flashgg/ul17_test/ul17_background_DiPhotonJetsBox_newMvaLimit.root
+diphotonDumper/trees/Background_13TeV_All	/eos/home-n/nschroed/public/flashgg/ul17_test/ul17_background_GJet_newMvaLimit.root

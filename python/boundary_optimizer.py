@@ -18,9 +18,9 @@ def min_interval(x, interval):
     if len(x['CMS_hgg_mass']) < 1:
         print("empty")
         return x
-    min_val = np.percentile(x['CMS_hgg_mass'].values,50-(interval/2))
-    max_val = np.percentile(x['CMS_hgg_mass'].values,50+(interval/2))
-    mask = x['CMS_hgg_mass'].between(min_val,max_val)
+
+    low,high = np.percentile(np.multiply(x['CMS_hgg_mass'].values,x['weight'].values),50-interval/2),np.percentile(np.multiply(x['CMS_hgg_mass'].values,x['weight'].values),50+interval/2)
+    mask = x['CMS_hgg_mass'].between(low,high)
     return x[mask]
 
 ###############################################################################
@@ -39,17 +39,17 @@ def target(x):
     x.sort() #boundaries must be in ascending order
 
     ret = 0
-    np.append(x,_max_)
+    x = np.append(x,_max_)
 
-    for i in range(_num_cats_-1):
+    for i in range(len(x)-1):
         mask = _data_['DiphotonMVA'].between(x[i],x[i+1])
         inv_mass = _data_[mask]
         reduced_inv_mass = np.array(min_interval(inv_mass,_min_interval_)['CMS_hgg_mass'].values)
         if len(reduced_inv_mass) > 1:
             if _method_ == 'series':
-                ret += pow(np.std(reduced_inv_mass)/len(reduced_inv_mass),2)
+                ret += pow(np.std(reduced_inv_mass)/np.sqrt(len(reduced_inv_mass)),2)
             elif _method_ == 'parallel':
-                ret += 1/pow(np.std(reduced_inv_mass)/len(reduced_inv_mass),2)
+                ret += 1/pow(np.std(reduced_inv_mass)/np.sqrt(len(reduced_inv_mass),2))
             elif _method_ == 'resolution':
                 ret += pow(np.std(reduced_inv_mass)/np.mean(reduced_inv_mass),2)
             else:
@@ -69,7 +69,10 @@ def target(x):
         return -999
 
 ###############################################################################
-def apply_minimize(iterations):
+def apply_minimize(arg):
+    
+    iterations,seed = arg
+    np.random.seed(seed)
 
     global _num_cats_
     global _data_
@@ -82,14 +85,14 @@ def apply_minimize(iterations):
     bounds = [(_min_bound_+i*(0.1),_max_bound_-(_num_cats_-i)*0.1) for i in range(_num_cats_)]
     optima = []
     for i in range(iterations):
-        np.random.seed(int(time.time()))
         guess = np.random.uniform(low=_min_bound_*np.ones(_num_cats_),
                             high=_max_bound_*np.ones(_num_cats_)).ravel().tolist()
         guess.sort()
+        guess = np.array([round(x,4) for x in guess])
         eps = 0.0001
         optima.append(minz(target, 
                            np.array(guess), 
-                           method='TNC', 
+                           method='L-BFGS-B', 
                            bounds=bounds, 
                            options={'eps':eps}))
 
@@ -104,6 +107,7 @@ def apply_minimize(iterations):
 ###############################################################################
 def minimize_target(data, num_cats, iterations,method='series'):
     """Handles the minimization"""
+    np.random.seed(int(time.time()))
     print("#"*40)
     print("[INFO][boundary_optimizer] Beginning minimization")
     print("[INFO][boundary_optimizer] There are {} categories".format(num_cats))
@@ -131,9 +135,9 @@ def minimize_target(data, num_cats, iterations,method='series'):
     if iterations >= 100:
         #do some multiprocessing to speed that up
         processors = mp.cpu_count() - 1
-        groups = [int(iterations/processors) for i in range(processors)]
+        groups = [(int(iterations/processors),np.random.randint(0,2**32)) for i in range(processors)]
         if iterations % processors != 0:
-            groups.append(iterations % processors)
+            groups.append((iterations % processors,np.random.randint(0,2**32)))
         print("[INFO][boundary_optimizer] submitting {} jobs, each with {} iterations".format(len(groups),groups[0]))
         pool = mp.Pool(processes=processors)
         optima = pool.map(apply_minimize,groups)
@@ -143,10 +147,10 @@ def minimize_target(data, num_cats, iterations,method='series'):
         best = 999
         ret = optima[0]
         for opt in optima:
-            if opt.fun < best:
+            if opt.fun < best and opt.success:
                 best = opt.fun
                 ret = opt
         print(ret)
 
     else:
-        print(apply_minimize(iterations))
+        print(apply_minimize((iterations,np.random.randint(0,2**32))))

@@ -17,6 +17,7 @@ import sys
 import uproot as up
 
 import boundary_optimizer as bound_opt
+import plot
 
 ###############################################################################
 def main():
@@ -34,7 +35,8 @@ def main():
                         help='number of times to run the minimizer')
     parser.add_argument("--method", default='series', type=str,
                         help='method to use in minimization, options are "series" (default) or "parallel"')
-                        
+    parser.add_argument("--xcheck", default=False, action='store_true',
+                        help='plot a bunch of stuff')
 
     args = parser.parse_args()
 
@@ -51,7 +53,9 @@ def main():
     print("[INFO] the specified config file is: {}".format(args.inputFile))
 
     #columns needed for minimzation are hardcoded
-    keep_cols = ['DiphotonMVA','CMS_hgg_mass']
+    keep_cols = ['DiphotonMVA','CMS_hgg_mass','leadEta','subleadEta','leadPt','subleadPt','lead_R9','sublead_R9','leadIDMVA','subleadIDMVA','decorrSigmaM','weight']
+    keep_cols_bkg = ['DiphotonMVA','CMS_hgg_mass','leadEta','subleadEta','leadPt','subleadPt','lead_R9','sublead_R9','leadIDMVA','subleadIDMVA','decorrSigmaM','weight','gen_lead_pt','gen_sublead_pt']
+    drop_cols = ['leadEta','subleadEta','leadPt','subleadPt','leadIDMVA','subleadIDMVA']
     
 
     #open and load the data
@@ -63,13 +67,20 @@ def main():
     for line in config:
         line_list = line.split('\t')
         print("[INFO] opening {} as dataframe".format(line_list[1]))
-        df = up.open(line_list[1])[line_list[0]].pandas.df(keep_cols)
-        mva_mask = df['DiphotonMVA'].between(-0.5,999)
-        invmass_mask = df['CMS_hgg_mass'].between(105,140)
-        df = df.loc[invmass_mask&mva_mask]
+        df = pd.DataFrame()
+        if line_list[0].find('Back') != -1 or line_list[0].find('back') != -1:
+            df = up.open(line_list[1])[line_list[0]].pandas.df(keep_cols_bkg)
+        else:
+            df = up.open(line_list[1])[line_list[0]].pandas.df(keep_cols)
+        #preselection
         files.append(df)
 
+    if args.xcheck:
+        plot.plot(files)
+        return
+        
     data = pd.concat(files)
+    data.drop(drop_cols,axis=1,inplace=True)
 
     #hand the data off the minimizer
     bound_opt.minimize_target(data, args.num_bounds, args.num_iter,args.method)
