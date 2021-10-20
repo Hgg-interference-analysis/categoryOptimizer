@@ -3,23 +3,17 @@
 """
 This is the control script for the diphoton mva boundary optimizer
 
-Data should be taken from output from flashgg.
+Data should be taken from output from a dumper in flashgg.
 
 Usage/Order of Operations:
 
 """
 
 import argparse as ap
-import numpy as np
-import os 
 import pandas as pd
-import sys
-import uproot as up
-
-import boundary_optimizer as bound_opt
-import plot
 
 import python.helpers.helper_optimize as helper_optimize
+from python.classes.minimizer_class import minimizer
 
 ###############################################################################
 def main():
@@ -44,18 +38,18 @@ def main():
 
     helper_optimize.print_setup(sys.argv, args.inputFile)
 
-    df_collection_data = helper_optimize.extract_data(args.input_file)
+    df_data = helper_optimize.extract_data(args.input_file)
 
     if args.xcheck:
-        plot.plot(df_collection_data)
+        plot.plot(df_data)
         return
-        
-    data = pd.concat(df_collection_data)
-    data.drop(drop_cols,axis=1,inplace=True)
 
     #hand the data off the minimizer
-    bound_opt.minimize_target(data, args.num_bounds, args.num_iter,args.method)
-    
+    my_minimizer = minimizer(df_data, args.num_cats, num_test=args.num_tests, method=args.method)
+    my_minimizer.run()
+
+    print(f'the optimal boundaries are {my_minimizer.optimal_boundaries}')
+
 
 if __name__ == "__main__":
     main()
