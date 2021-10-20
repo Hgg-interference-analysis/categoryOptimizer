@@ -33,31 +33,38 @@ class minimizer:
             else:
                 self.bounds.append((self.cats[i-1].upper, 1.0))
 
-    def create_categories(self, bounds = []):
+    def create_categories(self, use_bounds = False):
         """ creates categories for the minimizer """
         if len(self.cats) > 0:
             self.cats = []
 
-        for i in range(num_cats):
-            lower = 0.
-            upper = 0.1
-            if len(self.cats) == 0:
-                lower = rand.uniform(self.min_mva, self.max_mva - 0.5)
-                self.boundaries.append(lower)
-            else:
-                lower = rand.uniform(self.cats[-1].upper, self.max_mva)
+        if not use_bounds:
+            for i in range(num_cats):
+                lower = 0.
+                upper = 0.1
+                if len(self.cats) == 0:
+                    lower = rand.uniform(self.min_mva, self.max_mva - 0.5)
+                    self.boundaries.append(lower)
+                else:
+                    lower = rand.uniform(self.cats[-1].upper, self.max_mva)
             
-            upper = rand.uniform(lower, self.max_mva)
+                upper = rand.uniform(lower, self.max_mva) if i != num_cats-1 else 1.0
+                invmass = self.data[self.data['DiphotonMVA'].between(lower, upper)]
+                self.cats.append(mva_category(np.array(invmass['CMS_hgg_mass'].values), np.array(invmass['weight'].values), lower, upper))
+                if i != num_cats-1:
+                    self.boundaries.append(upper)
 
-            self.cats.append(mva_category(lower,upper))
-            if i != num_cats-1:
-                self.boundaries.append(upper)
+        else:
+            for i in range(len(self.boundaries)):
+                lower = self.boundaries[i]
+                upper = self.boundaries[i+1] if i+1 < len(self.boundaries) else 1.0
+                invmass = self.data[self.data['DiphotonMVA'].between(lower, upper)]
+                self.cats.append(mva_category(np.array(invmass['CMS_hgg_mass'].values), np.array(invmass['weight'].values), lower, upper))
         
-        self.cats[-1].set_upper_bound(1.0)
 
     def target(self):
         """ target function to minimize """
-        self.create_categories()
+        self.create_categories(use_bounds=True)
         self.update_bounds()
         total_resolution = 0
         for cat in self.cats:
@@ -77,9 +84,11 @@ class minimizer:
         
     def run(self):
         """ runs the minimizer """
-        self.create_categories()
-        self.update_bounds()
-        val, optimum = self.optimize_boundaries()
-        if val < self.minimum:
-            self.optimal_boundaries = optimum.copy()
+        while self.num_test > 0:
+            self.num_tests -= 1
+            self.create_categories(use_bounds=False)
+            self.update_bounds()
+            val, optimum = self.optimize_boundaries()
+            if val < self.minimum:
+                self.optimal_boundaries = optimum.copy()
 
