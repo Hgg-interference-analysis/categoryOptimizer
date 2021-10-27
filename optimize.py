@@ -11,6 +11,7 @@ Usage/Order of Operations:
 
 import argparse as ap
 import pandas as pd
+import sys
 
 import python.helpers.helper_optimize as helper_optimize
 from python.classes.minimizer_class import minimizer
@@ -25,9 +26,9 @@ def main():
                         help='input config file containing dataset and tree whose resolution will be the target of the minimization')
     parser.add_argument("-o","--output",
                         help='output tag used to generate output file names')
-    parser.add_argument("-n","--num_bounds", default=4, type=int,
+    parser.add_argument("-n","--num-bounds", default=4, type=int, dest='n_bounds',
                         help='number of categories to optimize')
-    parser.add_argument("--num_iter", default=10, type=int,
+    parser.add_argument("--num-iter", default=10, type=int, dest='iters',
                         help='number of times to run the minimizer')
     parser.add_argument("--method", default='series', type=str,
                         help='method to use in minimization, options are "series" (default) or "parallel"')
@@ -38,17 +39,16 @@ def main():
 
     helper_optimize.print_setup(sys.argv, args.inputFile)
 
-    df_data = helper_optimize.extract_data(args.input_file)
-
+    df_sig, df_bkg = helper_optimize.extract_data(args.inputFile, args.xcheck)
     if args.xcheck:
-        plot.plot(df_data)
         return
 
+    df_data = pd.concat([df_sig, df_bkg])
     #hand the data off the minimizer
-    my_minimizer = minimizer(df_data, args.num_cats, num_test=args.num_tests, method=args.method)
+    my_minimizer = minimizer(df_data, args.n_bounds, num_tests=args.iters, method=args.method)
     my_minimizer.run()
 
-    print(f'the optimal boundaries are {my_minimizer.optimal_boundaries}')
+    print(f'the optimal boundaries are {my_minimizer.optimal_boundaries}\nThe associated resolution is {my_minimizer.minimum}')
 
 
 if __name__ == "__main__":

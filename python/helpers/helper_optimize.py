@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import uproot as up
 
+import python.plotters.plot as plot
 
 def print_setup(cmd_line_args, input_file):
     cmd = ''
@@ -16,48 +17,48 @@ def print_setup(cmd_line_args, input_file):
     print("[INFO] the command you ran was: {}".format(cmd))
     print("[INFO] the specified config file is: {}".format(input_file))
 
-def extract_data(data_file):
-
-    #columns needed for minimzation are hardcoded
-    keep_cols = [
-        'DiphotonMVA',
-        'CMS_hgg_mass',
-        'leadEta', 'subleadEta',
-        'leadPt', 'subleadPt',
-        'lead_R9', 'sublead_R9',
-        'leadIDMVA', 'subleadIDMVA',
-        'decorrSigmaM', 'weight']
-    keep_cols_bkg = [
-        'DiphotonMVA',
-        'CMS_hgg_mass',
-        'leadEta', 'subleadEta',
-        'leadPt', 'subleadPt',
-        'lead_R9', 'sublead_R9',
-        'leadIDMVA', 'subleadIDMVA',
-        'decorrSigmaM','weight',
-        'gen_lead_pt', 'gen_sublead_pt']
-    drop_cols = ['leadEta', 'subleadEta',
-        'leadPt', 'subleadPt',
-        'leadIDMVA', 'subleadIDMVA']
+def extract_data(cfg_file, _kPlot):
 
     #open and load the data
-    config = open(args.inputFile,'r').readlines()
+    config = open(cfg_file,'r').readlines()
     config = [x.strip() for x in config]
 
-    files = []
+    bkg_files = []
+    sig_files = []
 
     for line in config:
         line_list = line.split('\t')
         print("[INFO] opening {} as dataframe".format(line_list[1]))
         df = pd.DataFrame()
-        if line_list[0].find('Back') != -1 or line_list[0].find('back') != -1:
-            df = up.open(line_list[1])[line_list[0]].pandas.df(keep_cols_bkg)
+        if line_list[0].find('bkg') != -1:
+            df = up.open(line_list[2])[line_list[1]].pandas.df()
+            bkg_files.append(df)
         else:
-            df = up.open(line_list[1])[line_list[0]].pandas.df(keep_cols)
+            df = up.open(line_list[2])[line_list[1]].pandas.df()
+            sig_files.append(df)
+        if _kPlot:
+            plot.plot(df, line_list[3])
         #preselection
-        files.append(df)
+    
+    df_bkg = pd.concat(bkg_files)
+    df_sig = pd.concat(sig_files)
 
-    data = pd.concat(df_collection_data)
-    data.drop(drop_cols,axis=1,inplace=True)
+    cols_bkg = list(df_bkg.columns)
+    cols_sig = list(df_sig.columns)
+    print(cols_bkg)
+    print(cols_sig)
+    drop_cols = [col for col in cols_bkg+cols_sig if (col not in cols_bkg) or (col not in cols_sig)]
+    drop_cols_sig = [col for col in drop_cols if col in cols_sig]
+    drop_cols_bkg = [col for col in drop_cols if col in cols_bkg]
 
-    return df
+    print(drop_cols_sig)
+    print(drop_cols_bkg)
+
+    if len(drop_cols_bkg) > 0:
+        df_bkg.drop(drop_cols_bkg, axis=1, inplace=True)
+    if len(drop_cols_sig) > 0:
+        df_sig.drop(drop_cols_sig, axis=1, inplace=True)
+
+    
+
+    return df_sig, df_bkg
