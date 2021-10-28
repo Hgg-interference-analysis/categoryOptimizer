@@ -45,7 +45,7 @@ def main():
 
     df_data = pd.concat([df_sig, df_bkg])
     #hand the data off the minimizer
-    my_minimizer = minimizer(df_data, args.n_bounds, num_tests=args.iters, method=args.method)
+    my_minimizer = minimizer(df_data, args.n_bounds, num_tests=args.iters)
     my_minimizer.run()
 
     print(f'the optimal boundaries are {my_minimizer.optimal_boundaries}\nThe associated resolution is {my_minimizer.minimum}')

@@ -1,33 +1,41 @@
 """
 Class for the minimizer 
 """
-import random as rand
+from matplotlib.pyplot import xcorr
 import numpy as np
-
+import random as rand
 from scipy.optimize import minimize
 
 from python.classes.category_class import mva_category
 
 class minimizer:
 
-    def __init__(self, data, num_cats, num_tests=10, method='series') -> None:
-        self.data = data 
+    def __init__(self, data, num_cats, num_tests=10) -> None:
+        self.mva = np.array(data['diphoton_mva'].values)
+        self.mass = np.array(data['CMS_hgg_mass'].values)
+        self.weights = np.array(data['weight'].values)
         self.num_cats = num_cats
         self.num_tests = num_tests
-        self.method = method
-        self.min_mva = min(data['diphoton_mva'].values)
-        self.max_mva = max(data['diphoton_mva'].values)
+        self.min_mva = min(self.mva)
+        self.max_mva = max(self.mva)
         self.cats = []
         self.boundaries = []
         self.bounds = []
         self.minimum = np.inf
         self.optimal_boundaries = []
+        self.sort_data()
+
+    def sort_data(self):
+        sorter = np.argsort(self.mass)
+        self.mass = self.mass[sorter]
+        self.weights = self.weights[sorter]
+        self.mva = self.mva[sorter]
 
     def update_bounds(self):
         """ updates the rectangular bounds on the boundary locations """
         self.bounds = []
         for i in range(self.num_cats):
-            self.bounds.append((self.min_mva + 0.05*float(i), self.max_mva - 0.05*float(self.num_cats-i)))
+            self.bounds.append((self.min_mva + 0.05*float(i), self.max_mva - 0.01*float(self.num_cats-i)))
 
     def create_categories(self, use_bounds = False):
         """ creates categories for the minimizer """
@@ -36,32 +44,40 @@ class minimizer:
 
         if not use_bounds:
             self.boundaries = []
-            self.boundaries.append(self.min_mva)
-            for i in range(self.num_cats-1):
-                self.boundaries.append(rand.uniform(self.bounds[i+1][0], self.bounds[i+1][1]))
-
+            self.boundaries = [self.min_mva if i == 0 else rand.uniform(self.bounds[i][0]+0.05, self.bounds[i][1]) for i in range(self.num_cats)]
             self.boundaries.sort()
+
             for i in range(self.num_cats):
                 lower, upper = self.boundaries[i], self.boundaries[i+1] if i != self.num_cats - 1 else 1.0
-                invmass = self.data[self.data['diphoton_mva'].between(lower, upper)]
-                self.cats.append(mva_category(np.array(invmass['CMS_hgg_mass'].values), np.array(invmass['weight'].values), lower, upper))
+                mask = np.logical_and(lower <= self.mva, self.mva <= upper)
+                self.cats.append(mva_category(self.mass[mask], self.weights[mask]))
 
         else:
+            self.boundaries.sort()
             for i in range(len(self.boundaries)):
                 lower,upper = self.boundaries[i], self.boundaries[i+1] if i+1 < len(self.boundaries) else 1.0
-                invmass = self.data[self.data['diphoton_mva'].between(lower, upper)]
-                self.cats.append(mva_category(np.array(invmass['CMS_hgg_mass'].values), np.array(invmass['weight'].values), lower, upper))
+                mask = np.logical_and(lower <= self.mva, self.mva <= upper)
+                self.cats.append(mva_category(self.mass[mask], self.weights[mask]))
         
 
     def target(self, boundaries):
         """ target function to minimize """
+        diffs = [abs(boundaries[i]-boundaries[i+1]) for i in range(len(boundaries)-1)]
+        if any(x <= 0.01 for x in diffs):
+            return 999
         self.boundaries = boundaries
         self.boundaries.sort()
         self.create_categories(use_bounds=True)
         total_resolution = 0
+        res_weight = 0
+        total_mean = 0
+        mean_weight = 0
         for cat in self.cats:
-            total_resolution += cat.resolution
-        return np.sqrt(total_resolution)
+            total_resolution += cat.variance / cat.err_variance**2
+            res_weight += 1 / cat.err_variance**2
+            total_mean += cat.mean / cat.err_mean**2
+            mean_weight += 1 / cat.err_mean**2 
+        return np.sqrt(total_resolution/res_weight)*mean_weight/total_mean
 
     def optimize_boundaries(self):
         """ optimizes the location of the boundaries by minimizing the target function """
@@ -79,7 +95,6 @@ class minimizer:
             print(f'iter {i}')
             self.update_bounds()
             self.create_categories(use_bounds=False)
-            print(self.bounds)
             val, optimum = self.optimize_boundaries()
             print(val, optimum)
             if val < self.minimum:
