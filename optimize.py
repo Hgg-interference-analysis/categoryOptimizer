@@ -47,8 +47,11 @@ def main():
     #hand the data off the minimizer
     my_minimizer = minimizer(df_data, args.n_bounds, num_tests=args.iters)
     my_minimizer.run()
-
-    print(f'the optimal boundaries are {my_minimizer.optimal_boundaries}\nThe associated resolution is {my_minimizer.minimum}')
+    
+    opt_bounds = [round(x,3) for x in my_minimizer.optimal_boundaries]
+    opt_res = round(my_minimizer.minimum, 6)
+    opt_res_err = round(my_minimizer.min_unc, 6)
+    print(f'the optimal boundaries are {opt_bounds}\nThe associated resolution is {opt_res}')
 
 
 if __name__ == "__main__":

@@ -23,6 +23,7 @@ class minimizer:
         self.bounds = []
         self.minimum = np.inf
         self.optimal_boundaries = []
+        self.res_uncs = {}
         self.sort_data()
 
     def sort_data(self):
@@ -64,20 +65,28 @@ class minimizer:
         """ target function to minimize """
         diffs = [abs(boundaries[i]-boundaries[i+1]) for i in range(len(boundaries)-1)]
         if any(x <= 0.01 for x in diffs):
+            self.res_uncs[999] = 999
             return 999
         self.boundaries = boundaries
         self.boundaries.sort()
         self.create_categories(use_bounds=True)
-        total_resolution = 0
-        res_weight = 0
-        total_mean = 0
+        sigma = 0
+        sigma_weight = 0
+        mean = 0
         mean_weight = 0
         for cat in self.cats:
-            total_resolution += cat.variance / cat.err_variance**2
-            res_weight += 1 / cat.err_variance**2
-            total_mean += cat.mean / cat.err_mean**2
+            sigma += cat.variance / cat.err_variance
+            sigma_weight += 1 / cat.err_variance
+            mean += cat.mean / cat.err_mean**2
             mean_weight += 1 / cat.err_mean**2 
-        return np.sqrt(total_resolution/res_weight)*mean_weight/total_mean
+        w_mean = mean/mean_weight
+        w_mean_unc  = np.sqrt(1/mean_weight)
+        w_sigma = np.sqrt(sigma/sigma_weight)
+        w_sigma_unc = np.sqrt(1/sigma_weight)
+        res = w_sigma/w_mean
+        res_err = res * np.sqrt((w_mean_unc/w_mean)**2 + (w_sigma_unc/w_sigma)**2)
+        self.res_uncs[res] = res_err
+        return res
 
     def optimize_boundaries(self):
         """ optimizes the location of the boundaries by minimizing the target function """
@@ -87,17 +96,19 @@ class minimizer:
                            method='L-BFGS-B',
                            bounds=self.bounds,
                            options={'eps':eps})
-        return optimum.fun, optimum.x
+        return optimum.fun, self.res_uncs[optimum.fun], optimum.x
         
     def run(self):
         """ runs the minimizer """
         for i in range(self.num_tests): 
             print(f'iter {i}')
             self.update_bounds()
+            self.res_uncs = {}
             self.create_categories(use_bounds=False)
-            val, optimum = self.optimize_boundaries()
-            print(val, optimum)
+            val, val_unc, optimum = self.optimize_boundaries()
+            print(f'{100*round(val,6)} +/- {100*round(val_unc,6)}', optimum)
             if val < self.minimum:
                 self.optimal_boundaries = optimum.copy()
-                self.minimum=val
+                self.minimum = val
+                self.min_unc = val_unc
 
