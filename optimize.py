@@ -19,7 +19,7 @@ import python.plotters.plot as plot
 
 ###############################################################################
 def main():
-
+    
     #option management
     parser = ap.ArgumentParser(description="Diphoton MVA Boundary Optimizer")
 
