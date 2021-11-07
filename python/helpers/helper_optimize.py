@@ -17,7 +17,7 @@ def print_setup(cmd_line_args, input_file):
     print("[INFO] the command you ran was: {}".format(cmd))
     print("[INFO] the specified config file is: {}".format(input_file))
 
-def extract_data(cfg_file, _kPlot):
+def extract_data(cfg_file, _kXcheckPlot, _kStackPlot, output_title):
 
     #open and load the data
     config = open(cfg_file, 'r').readlines()
@@ -26,7 +26,9 @@ def extract_data(cfg_file, _kPlot):
     keep_cols = ['CMS_hgg_mass', 'diphoton_mva', 'weight']
 
     bkg_files = []
+    bkg_titles = []
     sig_files = []
+    sig_titles = []
 
     for line in config:
         line_list = line.split('\t')
@@ -35,11 +37,18 @@ def extract_data(cfg_file, _kPlot):
         if line_list[0].find('bkg') != -1:
             df = up.open(line_list[2])[line_list[1]].pandas.df(keep_cols)
             bkg_files.append(df)
+            bkg_titles.append(line_list[3])
         else:
             df = up.open(line_list[2])[line_list[1]].pandas.df(keep_cols)
             sig_files.append(df)
-        if _kPlot:
-            plot.plot(df, line_list[3])
+            sig_titles.append(line_list[3])
+        if _kXcheckPlot:
+            plot.xcheck_plot(df, line_list[3])
+
+    if _kStackPlot:
+        sig = (sig_files, sig_titles)
+        bkg = (bkg_files, bkg_titles)
+        plot.stack_plot(sig, bkg, output_title)
 
     df_bkg = pd.concat(bkg_files)
     df_sig = pd.concat(sig_files)
