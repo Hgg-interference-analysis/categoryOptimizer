@@ -1,10 +1,10 @@
-import enum
 import numpy as np
 from numpy.core.shape_base import stack
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.stats import iqr
 
+import python.helpers.helper_plot as plot
 
 def plot_df_var(var_name, values, weights, output_tag):
     """ plots var_name as a histogram """
@@ -27,7 +27,7 @@ def plot_df_var(var_name, values, weights, output_tag):
     hist_full.insert(0, hist[0])
 
     x_err = (bins[1]-bins[0])/2
-    y_err = get_bin_uncertainties(bins, values, weights)
+    y_err = plot.get_bin_uncertainties(bins, values, weights)
     
     fig,axs = plt.subplots(nrows=1, ncols=1)
     fig.subplots_adjust(left=0.12, right=0.88, top=0.95, bottom=0.1)
@@ -83,7 +83,7 @@ def stack_plot(sig, bkg, output_tag):
     for i,df in enumerate(sig_dfs):
         hist, bins = np.histogram(df['diphoton_mva'].values, bins=num_bins, range=[0,1], weights=df['weight'].values)
         hist = lumi_scale * hist
-        bin_errors.append(get_bin_uncertainties(bins, df['diphoton_mva'].values, df['weight'].values))
+        bin_errors.append(plot.get_bin_uncertainties(bins, df['diphoton_mva'].values, df['weight'].values))
         hists.append(np.copy(hist))
         labels.append(sig_titles[i])
 
@@ -91,7 +91,7 @@ def stack_plot(sig, bkg, output_tag):
     for i,df in enumerate(bkg_dfs):
         hist, bins = np.histogram(df['diphoton_mva'].values, bins=num_bins, range=[0,1], weights=df['weight'].values)
         hist = lumi_scale * bkg_scale * hist
-        bin_errors.append(get_bin_uncertainties(bins, df['diphoton_mva'].values, df['weight'].values))
+        bin_errors.append(plot.get_bin_uncertainties(bins, df['diphoton_mva'].values, df['weight'].values))
         hists.append(np.copy(hist))
         labels.append(bkg_titles[i])
 
@@ -104,7 +104,7 @@ def stack_plot(sig, bkg, output_tag):
 
     # setup the plot
     hists = hists[::-1]
-    stack_colors = color_gradient(len(hists))
+    stack_colors = plot.color_gradient(len(hists))
     fig, axs = plt.subplots(1,1)
     fig.subplots_adjust(left=0.12, right=0.88, top=0.95, bottom=0.1)
 
