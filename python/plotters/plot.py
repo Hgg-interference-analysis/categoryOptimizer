@@ -23,7 +23,7 @@ def stack_plot(sig, bkg, output_tag):
     """ makes a stacked histogram plot """
 
     lumi_scale = 41.5 # 2017 luminosity
-    bkg_scale = 1.3 # side-band estimate of num bkg events
+    bkg_scale = 2.76  # side-band estimate of num bkg events
 
     sig_dfs, sig_titles = sig
     bkg_dfs, bkg_titles = bkg
@@ -31,8 +31,8 @@ def stack_plot(sig, bkg, output_tag):
     labels = list(sig_titles) + list(bkg_titles)
 
     # collect signal and background
-    hists_sig, err_sig, bins = plot.collect_hists(sig_dfs)
-    hists_bkg, err_bkg, bins = plot.collect_hists(bkg_dfs)
+    hists_sig, err_sig, bins = plot.collect_hists(sig_dfs, lumi_scale=lumi_scale*100)
+    hists_bkg, err_bkg, bins = plot.collect_hists(bkg_dfs, lumi_scale=lumi_scale, bkg_scale=bkg_scale)
 
     hists = hists_sig + hists_bkg
     bin_errors = err_sig + err_bkg

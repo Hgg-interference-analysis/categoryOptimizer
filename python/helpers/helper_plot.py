@@ -60,7 +60,7 @@ def plot_df_var(var_name, values, weights, output_tag):
     hist_full.insert(0, hist[0])
 
     x_err = (bins[1]-bins[0])/2
-    y_err = plot.get_bin_uncertainties(bins, values, weights)
+    y_err = get_bin_uncertainties(bins, values, weights)
 
     fig, axs = plt.subplots(nrows=1, ncols=1)
     fig.subplots_adjust(left=0.12, right=0.88, top=0.95, bottom=0.1)
@@ -82,7 +82,7 @@ def plot_df_var(var_name, values, weights, output_tag):
     plt.close(fig)
 
 
-def collect_hists(dfs):
+def collect_hists(dfs, lumi_scale=1., bkg_scale=1.):
     """ returns histograms from a list of dataframes """
 
     hists = []
@@ -94,7 +94,7 @@ def collect_hists(dfs):
         hist, bins = np.histogram(df['diphoton_mva'].values, bins=num_bins, range=[
                                   0, 1], weights=df['weight'].values)
         hist = lumi_scale * hist
-        bin_errors.append(plot.get_bin_uncertainties(
+        bin_errors.append(get_bin_uncertainties(
             bins, df['diphoton_mva'].values, df['weight'].values))
         hists.append(np.copy(hist))
 
@@ -143,8 +143,10 @@ def plot_stacked_hists(hists, bins, bin_errors, labels, output_tag):
 
     axs.set_xlabel("Diphoton MVA Score")
     axs.set_ylabel("Events / 0.02")
+    plt.ylim(0.3, 10**7)
+    axs.set_yscale('log')
 
     plt.grid(which='major', axis='both')
     fig.set_size_inches(16, 9)
-    fig.savefig('plot/stacked_histogram_'+output_tag+'.png')
+    fig.savefig('plots/stacked_histogram_'+output_tag+'.png')
     plt.close(fig)

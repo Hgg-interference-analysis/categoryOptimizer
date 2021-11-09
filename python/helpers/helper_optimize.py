@@ -17,8 +17,15 @@ def print_setup(cmd_line_args, input_file):
     print("[INFO] the command you ran was: {}".format(cmd))
     print("[INFO] the specified config file is: {}".format(input_file))
 
-def extract_data(cfg_file, _kXcheckPlot, _kStackPlot, output_title):
-
+def extract_data(args):
+    """ loads config file into dataframes """
+    #open args
+    cfg_file = args.inputFile
+    _kXcheckPlot = args.xcheck
+    _kStackPlot = args.plot
+    output_title = args.output
+    lumi_scale = args.lumi
+    bkg_scale = args.bkg_scale
     #open and load the data
     config = open(cfg_file, 'r').readlines()
     config = [x.strip() for x in config]
@@ -53,16 +60,7 @@ def extract_data(cfg_file, _kXcheckPlot, _kStackPlot, output_title):
     df_bkg = pd.concat(bkg_files)
     df_sig = pd.concat(sig_files)
 
-    cols_bkg = list(df_bkg.columns)
-    cols_sig = list(df_sig.columns)
-
-    drop_cols = [col for col in cols_bkg + cols_sig if (col not in cols_bkg) or (col not in cols_sig)]
-    drop_cols_sig = [col for col in drop_cols if col in cols_sig]
-    drop_cols_bkg = [col for col in drop_cols if col in cols_bkg]
-
-    if len(drop_cols_bkg) > 0:
-        df_bkg.drop(drop_cols_bkg, axis=1, inplace=True)
-    if len(drop_cols_sig) > 0:
-        df_sig.drop(drop_cols_sig, axis=1, inplace=True)
+    df_sig['weight'] = lumi_scale * df_sig['weight'].values
+    df_bkg['weight'] = lumi_scale * bkg_scale * df_bkg['weight'].values
 
     return df_sig, df_bkg
