@@ -4,10 +4,6 @@
 This is the control script for the diphoton mva boundary optimizer
 
 Data should be taken from output from a dumper in flashgg.
-
-Notes: 
-    look for places to optimize the code, 
-
 """
 
 import argparse as ap
