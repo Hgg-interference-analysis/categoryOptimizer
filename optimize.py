@@ -5,7 +5,8 @@ This is the control script for the diphoton mva boundary optimizer
 
 Data should be taken from output from a dumper in flashgg.
 
-Usage/Order of Operations:
+Notes: 
+    look for places to optimize the code, 
 
 """
 
@@ -35,7 +36,7 @@ def main():
                         help='number of times to run the minimizer')
     parser.add_argument("--lumi-scale", default=1., type=float, dest='lumi',
                         help="luminosity of this dataset")
-    parser.add_argument("--bkg-scale", default=1., type=float, dest='bkg_scale',
+    parser.add_argument("--bkg-scale", default=1.5, type=float, dest='bkg_scale',
                         help="scale for background file weights, use python/utils/derive_bkg_scale.py")
     parser.add_argument("--xcheck", default=False, action='store_true',
                         help='plots variables for each file')
@@ -59,8 +60,10 @@ def main():
     opt_bounds.sort()
     opt_res = 100*round(my_minimizer.minimum, 6)
     opt_res_err = round(100*my_minimizer.min_unc, 4)
-    print(
-        f'the optimal boundaries are {opt_bounds}\nThe associated resolution is {opt_res} +/- {opt_res_err}')
+    opt_sorb = my_minimizer.s_over_root_b
+    print(f'the optimal boundaries are {opt_bounds}')
+    print(f'The associated resolution is {opt_res} +/- {opt_res_err}')
+    print(f'The s.o.r.b. is {opt_sorb}')
 
 
 if __name__ == "__main__":

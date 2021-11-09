@@ -6,7 +6,7 @@ from scipy.stats import moment
 class mva_category:
     """ class to describe diphoton mva categories """
 
-    def __init__(self, invmass, weights) -> None:
+    def __init__(self, invmass, weights, is_signal) -> None:
         self.range = self.weighted_quantile(invmass, weights, 0.683)
         mask = np.logical_and(
             self.range[0] <= invmass, invmass <= self.range[1])
@@ -15,6 +15,8 @@ class mva_category:
             np.power((invmass[mask] - self.mean), 2), weights=weights[mask])
         self.err_variance = self.get_err_variance(invmass[mask], weights[mask])
         self.err_mean = np.sqrt(self.variance)/np.sum(mask)
+        self.s_over_root_b = np.sum(
+            is_signal[mask])/np.sqrt(np.sum(np.logical_not(is_signal[mask])))
 
     def get_err_variance(self, x, w):
         """ uncertainty on variance is (m4 - m2^2) / (4 n m2)"""
