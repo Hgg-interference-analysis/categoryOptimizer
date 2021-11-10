@@ -14,8 +14,6 @@ import python.helpers.helper_optimize as helper_optimize
 from python.classes.minimizer_class import minimizer
 import python.plotters.plot as plot
 
-###############################################################################
-
 
 def main():
 
@@ -32,7 +30,7 @@ def main():
                         help='number of times to run the minimizer')
     parser.add_argument("--lumi-scale", default=1., type=float, dest='lumi',
                         help="luminosity of this dataset")
-    parser.add_argument("--bkg-scale", default=1.5, type=float, dest='bkg_scale',
+    parser.add_argument("--bkg-scale", default=1., type=float, dest='bkg_scale',
                         help="scale for background file weights, use python/utils/derive_bkg_scale.py")
     parser.add_argument("--xcheck", default=False, action='store_true',
                         help='plots variables for each file')
