@@ -8,6 +8,10 @@ class mva_category:
 
     def __init__(self, invmass, weights, is_signal) -> None:
         self.range = self.weighted_quantile(invmass, weights, 0.683)
+        if self.range[1] > 130:
+            self.range[1] == 130
+        if self.range[0] < 110:
+            self.range[0] = 110
         mask = np.logical_and(
             self.range[0] <= invmass, invmass <= self.range[1])
         self.mean = np.average(invmass[mask], weights=weights[mask])
