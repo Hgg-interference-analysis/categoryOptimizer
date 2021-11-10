@@ -76,6 +76,7 @@ class minimizer:
                  for i in range(len(boundaries)-1)]
         if any(x <= 0.01 for x in diffs):
             self.res_uncs[999] = 999
+            self.signal_strengths[999] = 999
             return 999
         self.boundaries = boundaries
         self.boundaries.sort()
