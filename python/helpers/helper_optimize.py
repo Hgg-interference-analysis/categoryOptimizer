@@ -60,7 +60,7 @@ def extract_data(args):
     df_bkg = pd.concat(bkg_files)
     df_sig = pd.concat(sig_files)
 
-    df_sig['weight'] = lumi_scale * df_sig['weight'].values * 100
+    df_sig['weight'] = lumi_scale * df_sig['weight'].values
     df_bkg['weight'] = lumi_scale * bkg_scale * df_bkg['weight'].values
 
     df_sig['is_signal'] = [True for i in range(len(df_sig))]
