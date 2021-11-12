@@ -1,4 +1,5 @@
 
+from matplotlib.pyplot import xcorr
 import numpy as np
 from scipy.stats import moment
 
@@ -8,19 +9,17 @@ class mva_category:
 
     def __init__(self, invmass, weights, is_signal) -> None:
         self.range = self.weighted_quantile(invmass, weights, 0.683)
-        if self.range[1] > 130:
-            self.range[1] == 130
-        if self.range[0] < 110:
-            self.range[0] = 110
         mask = np.logical_and(
             self.range[0] <= invmass, invmass <= self.range[1])
         self.mean = np.average(invmass[mask], weights=weights[mask])
         self.variance = np.average(
             np.power((invmass[mask] - self.mean), 2), weights=weights[mask])
+        # print(self.range, np.sqrt(self.variance), self.mean, np.sqrt(self.variance)/self.mean)
         self.err_variance = self.get_err_variance(invmass[mask], weights[mask])
         self.err_mean = np.sqrt(self.variance)/np.sum(mask)
-        self.s_over_root_b = np.sum(
-            is_signal[mask])/np.sqrt(np.sum(np.logical_not(is_signal[mask])))
+        signal_weights = weights[np.logical_and(is_signal,mask)]
+        bkg_weights = weights[np.logical_and(np.logical_not(is_signal),mask)]
+        self.s_over_root_b = np.sum(signal_weights)/np.sqrt(np.sum(bkg_weights))
 
     def get_err_variance(self, x, w):
         """ uncertainty on variance is (m4 - m2^2) / (4 n m2)"""

@@ -36,6 +36,8 @@ def main():
                         help='plots variables for each file')
     parser.add_argument("--plot", default=False, action='store_true',
                         help='makes the stack plots')
+    parser.add_argument("-b", "--boundaries", type=float, default=[], nargs="*", 
+                        help="Adds boundaries to the stack plot")
     args = parser.parse_args()
 
     helper_optimize.print_setup(sys.argv, args.inputFile)

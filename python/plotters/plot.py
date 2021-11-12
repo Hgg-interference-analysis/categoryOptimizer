@@ -19,7 +19,7 @@ def xcheck_plot(df, output_tag):
     return
 
 
-def stack_plot(sig, bkg, output_tag):
+def stack_plot(sig, bkg, output_tag, bounds=[]):
     """ makes a stacked histogram plot """
 
     lumi_scale = 41.5 # 2017 luminosity
@@ -34,17 +34,16 @@ def stack_plot(sig, bkg, output_tag):
     hists_sig, err_sig, bins = plot.collect_hists(sig_dfs, lumi_scale=lumi_scale*100)
     hists_bkg, err_bkg, bins = plot.collect_hists(bkg_dfs, lumi_scale=lumi_scale, bkg_scale=bkg_scale)
 
-    hists = hists_sig + hists_bkg
-    bin_errors = err_sig + err_bkg
-
     # create stack plots
     stack_hist = np.zeros(len(bins)-1)
-    hists = hists[::-1]
-    for i,hist in enumerate(hists):
+    hists_bkg = hists_bkg[::-1]
+    for i,hist in enumerate(hists_bkg):
         stack_hist = np.add(stack_hist, hist)
-        hists[i] = stack_hist
+        hists_bkg[i] = stack_hist
 
     # setup the plot
-    hists = hists[::-1]
+    hists_bkg = hists_bkg[::-1]
+    hists = hists_sig + hists_bkg
+    bin_errors = err_sig + err_bkg
     
-    plot.plot_stacked_hists(hists, bins, bin_errors, labels, output_tag)
+    plot.plot_stacked_hists(hists, bins, bin_errors, labels, output_tag, bounds)

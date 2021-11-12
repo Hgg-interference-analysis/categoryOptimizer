@@ -6,8 +6,6 @@ import argparse as ap
 import uproot3 as up
 import matplotlib.pyplot as plt
 
-from python.helpers.helper_plot import get_bin_uncertainties
-
 
 def load_cfg_to_df(cfg_file):
     """ loads the cfg file into dataframes """
@@ -41,10 +39,10 @@ def load_cfg_to_df(cfg_file):
     return df_data, df_bkg
 
 
-def get_side_bands_hist(df, _kIsData=False, lumi_scale=41.5):
+def get_side_bands_hist(df, var, hrange=[100, 180], num_bins=160, _kIsData=False, lumi_scale=41.5):
     """ returns a numpy array of the sideband regions """
 
-    mass = np.array(df['CMS_hgg_mass'].values)
+    mass = np.array(df[var].values)
     weights = lumi_scale * \
         np.array(df['weight'].values) if not _kIsData else np.ones(len(mass))
 
@@ -54,10 +52,11 @@ def get_side_bands_hist(df, _kIsData=False, lumi_scale=41.5):
     mass = mass[mask]
     weights = weights[mask]
 
-    hist, bins = np.histogram(mass, bins=160, range=[100, 180], weights=weights)
-    return hist, bins
+    this_var = (df[mask])[var]
+    return np.histogram(this_var, bins=num_bins, range=hrange, weights=weights)
 
-def plot(bins, data, bkg):
+
+def plot(bins, data, bkg, xlabel, ylabel, title):
     """ plots data and bkg against each other in the side band regions """
 
     mids = [(bins[i]+bins[i+1])/2 for i in range(len(bins)-1)]
@@ -70,7 +69,12 @@ def plot(bins, data, bkg):
 
     ax.legend(loc='best')
 
-    plt.show()
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+
+    fig.set_size_inches(16, 9)
+    fig.savefig('plots/'+title+'.png')
+    plt.close(fig)
 
 
 def main():
@@ -86,11 +90,21 @@ def main():
 
     dat_df, bkg_df = load_cfg_to_df(args.config)
 
-    dat_side_bands, bins = get_side_bands_hist(dat_df, _kIsData=True)
-    bkg_side_bands, bins = get_side_bands_hist(bkg_df, lumi_scale=args.lumi_scale)
+    dat_side_bands, bins = get_side_bands_hist(dat_df, 'CMS_hgg_mass', _kIsData=True)
+    bkg_side_bands, bins = get_side_bands_hist(bkg_df, 'CMS_hgg_mass', lumi_scale=args.lumi_scale)
 
-    dat_dipho_mva, bins = np.histogram(dat_df['diphoton_mva'].values, bins=100, range=[0,1], weights=dat_df['weight'].values)
-    bkg_dipho_mva, bins = np.histogram(bkg_df['diphoton_mva'].values, bins=100, range=[0,1], weights=args.lumi_scale*bkg_df['weight'].values)
+    plot(bins, 
+        dat_side_bands, bkg_side_bands, 
+        "Diphoton Invariant Mass [GeV]", "Events / 0.05 GeV ",
+        "mass_sidebands")
+
+    dat_dipho_mva, bins = get_side_bands_hist(dat_df, 'diphoton_mva', hrange=[0,1], num_bins=50, _kIsData=True, lumi_scale=1.)
+    bkg_dipho_mva, bins = get_side_bands_hist(bkg_df, 'diphoton_mva', hrange=[0,1], num_bins=50, lumi_scale=args.lumi_scale)
+
+    plot(bins, 
+        dat_dipho_mva, bkg_dipho_mva, 
+        "Diphoton MVA Score", "Events / 0.02",
+        "diphoton_mva_sidebands")
 
     events_data = np.sum(dat_side_bands)
     events_bkg = np.sum(bkg_side_bands)
@@ -99,7 +113,6 @@ def main():
     print(f'there are {events_bkg} in the side bands in bkg')
     print(f'the scale for bkg is: {events_data/events_bkg}')
 
-    plot(bins, dat_dipho_mva, bkg_dipho_mva)
 
 if __name__ == "__main__":
     main()

@@ -22,7 +22,7 @@ def extract_data(args):
     #open args
     cfg_file = args.inputFile
     _kXcheckPlot = args.xcheck
-    _kStackPlot = args.plot
+    _kStackPlot = args.plot    
     output_title = args.output
     lumi_scale = args.lumi
     bkg_scale = args.bkg_scale
@@ -53,9 +53,9 @@ def extract_data(args):
             plot.xcheck_plot(df, line_list[3])
 
     if _kStackPlot:
-        sig = (sig_files, sig_titles)
+        sig = ([pd.concat(sig_files)], ["100*signal"])
         bkg = (bkg_files, bkg_titles)
-        plot.stack_plot(sig, bkg, output_title)
+        plot.stack_plot(sig, bkg, output_title, bounds=args.boundaries)
 
     df_bkg = pd.concat(bkg_files)
     df_sig = pd.concat(sig_files)

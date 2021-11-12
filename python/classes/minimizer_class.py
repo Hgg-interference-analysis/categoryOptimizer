@@ -16,6 +16,11 @@ class minimizer:
         self.mass = np.array(data['CMS_hgg_mass'].values)
         self.weights = np.array(data['weight'].values)
         self.sig_bkg = np.array(data['is_signal'].values)
+        mass_mask = np.logical_and(115 < self.mass, self.mass < 135)
+        self.mass = self.mass[mass_mask]
+        self.mva = self.mva[mass_mask]
+        self.weights = self.weights[mass_mask]
+        self.sig_bkg = self.sig_bkg[mass_mask]
         self.num_cats = num_cats
         self.num_tests = num_tests
         self.min_mva = min(self.mva)
@@ -121,7 +126,7 @@ class minimizer:
             self.res_uncs = {}
             self.create_categories(use_bounds=False)
             val, val_unc, optimum, s_over_root_b = self.optimize_boundaries()
-            print(f'{100*round(val,6)} +/- {100*round(val_unc,6)}', optimum)
+            print(f'{100*round(val,6)} +/- {100*round(val_unc,6)}', s_over_root_b, optimum)
             if val < self.minimum:
                 self.optimal_boundaries = optimum.copy()
                 self.minimum = val

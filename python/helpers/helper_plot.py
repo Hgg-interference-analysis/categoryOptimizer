@@ -101,7 +101,7 @@ def collect_hists(dfs, lumi_scale=1., bkg_scale=1.):
     return hists, bin_errors, bins
 
 
-def plot_stacked_hists(hists, bins, bin_errors, labels, output_tag):
+def plot_stacked_hists(hists, bins, bin_errors, labels, output_tag, bounds):
     """ creates a stacked histogram plot """
 
     stack_colors = color_gradient(len(hists))
@@ -129,7 +129,7 @@ def plot_stacked_hists(hists, bins, bin_errors, labels, output_tag):
 
         axs.fill_between(mids_full, hist_full,
                          y2=next_hist, step='mid',
-                         alpha=0.5, color=stack_colors[::-1][i])
+                         alpha=1, color=stack_colors[::-1][i])
 
         errorbar = axs.errorbar(mids, hist,
                                 xerr=x_err, yerr=bin_errors[i],
@@ -139,7 +139,13 @@ def plot_stacked_hists(hists, bins, bin_errors, labels, output_tag):
                         color=stack_colors[::-1][i], alpha=0.5)
         handels.append((fill[0], errorbar[0]))
 
-    axs.legend(handels, [f'{x}' for x in labels])
+    for i,bound in enumerate(bounds):
+        axs.plot([bound, bound], [0.3, 10**7], 
+                color='black', linestyle=(0, (5, 5)), markersize=0)
+        axs.annotate(f"Untagged {len(bounds)-1-i}", (bound, 0.3), xycoords='data',
+                    ha='left', va='bottom', rotation=270)
+
+    axs.legend(handels, [f'{x}' for x in labels], loc='upper right')
 
     axs.set_xlabel("Diphoton MVA Score")
     axs.set_ylabel("Events / 0.02")
