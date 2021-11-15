@@ -36,6 +36,7 @@ class minimizer:
         self.sort_data()
 
     def sort_data(self):
+        """ sorts data for faster quantile evaluation """
         sorter = np.argsort(self.mass)
         self.mass = self.mass[sorter]
         self.weights = self.weights[sorter]

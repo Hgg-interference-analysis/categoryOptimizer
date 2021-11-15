@@ -6,6 +6,7 @@ import logging
 import python.plotters.plot as plot
 
 def print_setup(cmd_line_args, input_file):
+    """ prints the configuation of the program """
     cmd = ''
     for arg in cmd_line_args:
         if ' ' in arg:
