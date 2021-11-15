@@ -7,12 +7,14 @@ Data should be taken from output from a dumper in flashgg.
 """
 
 import argparse as ap
+from numpy import log
 import pandas as pd
 import sys
 
 import python.helpers.helper_optimize as helper_optimize
 from python.classes.minimizer_class import minimizer
 import python.plotters.plot as plot
+import logging
 
 
 def main():
@@ -38,8 +40,11 @@ def main():
                         help='makes the stack plots')
     parser.add_argument("-b", "--boundaries", type=float, default=[], nargs="*", 
                         help="Adds boundaries to the stack plot")
+    parser.add_argument("--log", type=str, default=None, 
+                        help="name for log file")
     args = parser.parse_args()
 
+    logging.basicConfig(filename=args.log, level='INFO')
     helper_optimize.print_setup(sys.argv, args.inputFile)
 
     df_sig, df_bkg = helper_optimize.extract_data(args)
@@ -57,9 +62,12 @@ def main():
     opt_res = 100*round(my_minimizer.minimum, 6)
     opt_res_err = round(100*my_minimizer.min_unc, 4)
     opt_sorb = my_minimizer.s_over_root_b
-    print(f'the optimal boundaries are {opt_bounds}')
-    print(f'The associated resolution is {opt_res} +/- {opt_res_err}')
-    print(f'The s.o.r.b. is {opt_sorb}')
+    log_string = f'the optimal boundaries are {opt_bounds}'
+    logging.info(log_string)
+    log_string = f'The associated resolution is {opt_res} +/- {opt_res_err}'
+    logging.info(log_string)
+    log_string = f'The s.o.r.b. is {opt_sorb}'
+    logging.info(log_string)
 
 
 if __name__ == "__main__":

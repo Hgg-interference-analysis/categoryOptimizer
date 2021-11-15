@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import uproot3 as up
+import logging
 
 import python.plotters.plot as plot
 
@@ -12,10 +13,10 @@ def print_setup(cmd_line_args, input_file):
         else:
             cmd +=  "{} ".format(arg)
 
-    print("#"*40)
-    print("[INFO] Welcome to the diphoton mva boundary optimizer")
-    print("[INFO] the command you ran was: {}".format(cmd))
-    print("[INFO] the specified config file is: {}".format(input_file))
+    logging.info("#"*40)
+    logging.info("[INFO] Welcome to the diphoton mva boundary optimizer")
+    logging.info("[INFO] the command you ran was: {}".format(cmd))
+    logging.info("[INFO] the specified config file is: {}".format(input_file))
 
 def extract_data(args):
     """ loads config file into dataframes """
@@ -39,7 +40,7 @@ def extract_data(args):
 
     for line in config:
         line_list = line.split('\t')
-        print("[INFO] opening {} as dataframe".format(line_list[1]))
+        logging.info("[INFO] opening {} as dataframe".format(line_list[1]))
         df = pd.DataFrame()
         if line_list[0].find('bkg') != -1:
             df = up.open(line_list[2])[line_list[1]].pandas.df(keep_cols)

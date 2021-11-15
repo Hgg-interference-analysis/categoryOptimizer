@@ -5,6 +5,7 @@ from matplotlib.pyplot import xcorr
 import numpy as np
 import random as rand
 from scipy.optimize import minimize
+import logging
 
 from python.classes.category_class import mva_category
 
@@ -23,7 +24,7 @@ class minimizer:
         self.sig_bkg = self.sig_bkg[mass_mask]
         self.num_cats = num_cats
         self.num_tests = num_tests
-        self.min_mva = min(self.mva)
+        self.min_mva = min(self.mva)+0.025
         self.max_mva = max(self.mva)
         self.cats = []
         self.boundaries = []
@@ -121,12 +122,11 @@ class minimizer:
     def run(self):
         """ runs the minimizer """
         for i in range(self.num_tests):
-            print(f'iter {i}')
             self.update_bounds()
             self.res_uncs = {}
             self.create_categories(use_bounds=False)
             val, val_unc, optimum, s_over_root_b = self.optimize_boundaries()
-            print(f'{100*round(val,6)} +/- {100*round(val_unc,6)}', s_over_root_b, optimum)
+            logging.info(f' iter{i}: {100*round(val,6)} +/- {100*round(val_unc,6)}, {round(s_over_root_b,3)}, {optimum}')
             if val < self.minimum:
                 self.optimal_boundaries = optimum.copy()
                 self.minimum = val
