@@ -106,7 +106,7 @@ def plot_stacked_hists(hists, bins, bin_errors, labels, output_tag, bounds):
 
     stack_colors = color_gradient(len(hists))
     fig, axs = plt.subplots(1, 1)
-    fig.subplots_adjust(left=0.12, right=0.88, top=0.95, bottom=0.1)
+    fig.subplots_adjust(left=0.085, right=0.99, top=0.95, bottom=0.1)
 
     mids = [(bins[i]+bins[i+1])/2 for i in range(len(bins)-1)]
     mids_full = mids.copy()
@@ -134,6 +134,7 @@ def plot_stacked_hists(hists, bins, bin_errors, labels, output_tag, bounds):
         errorbar = axs.errorbar(mids, hist,
                                 xerr=x_err, yerr=bin_errors[i],
                                 drawstyle='steps-mid', capsize=0., 
+                                linewidth=3,
                                 color=stack_colors[::-1][i])
         fill = axs.fill(np.NaN, np.NaN, 
                         color=stack_colors[::-1][i], alpha=0.5)
@@ -147,12 +148,18 @@ def plot_stacked_hists(hists, bins, bin_errors, labels, output_tag, bounds):
 
     axs.legend(handels, [f'{x}' for x in labels], loc='upper right')
 
-    axs.set_xlabel("Diphoton MVA Score")
-    axs.set_ylabel("Events / 0.02")
+    axs.set_xlabel("Diphoton MVA Score", ha='right', x=1.)
+    axs.set_ylabel("Events / 0.02", ha='right', y=1.)
     plt.ylim(0.3, 10**7)
     axs.set_yscale('log')
+    axs.annotate("$\\bf{CMS} \ \\it{Simulation \ Preliminary}$",
+                xy=(0,1), xycoords="axes fraction",
+                ha='left', va='bottom')
+    axs.annotate('41.5 fb$^{-1}$ (13 TeV) 2017',
+                xy=(1,1), xycoords="axes fraction",
+                ha='right', va='bottom')
 
     plt.grid(which='major', axis='both')
-    fig.set_size_inches(16, 9)
+    fig.set_size_inches(7, 5)
     fig.savefig('plots/stacked_histogram_'+output_tag+'.png')
     plt.close(fig)
