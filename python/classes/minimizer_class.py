@@ -30,7 +30,9 @@ class minimizer:
         self.boundaries = []
         self.bounds = []
         self.minimum = np.inf
+        self.s_over_root_b = 0
         self.optimal_boundaries = []
+        self.res = {}
         self.res_uncs = {}
         self.signal_strengths = {}
         self.sort_data()
@@ -47,8 +49,8 @@ class minimizer:
         """ updates the rectangular bounds on the boundary locations """
         self.bounds = []
         for i in range(self.num_cats):
-            self.bounds.append((self.min_mva + 0.05*float(i),
-                               self.max_mva - 0.01*float(self.num_cats-i)))
+            self.bounds.append((self.min_mva + 0.1*float(i),
+                               self.max_mva - 1/float((3*i)**(3*i)+2)))
 
     def create_categories(self, use_bounds=False):
         """ creates categories for the minimizer """
@@ -57,8 +59,8 @@ class minimizer:
 
         if not use_bounds:
             self.boundaries = []
-            self.boundaries = [self.min_mva if i == 0 else rand.uniform(
-                self.bounds[i][0]+0.05, self.bounds[i][1]) for i in range(self.num_cats)]
+            self.boundaries = [rand.uniform(
+                self.bounds[i][0], self.bounds[i][1]) for i in range(self.num_cats)]
             self.boundaries.sort()
 
             for i in range(self.num_cats):
@@ -82,6 +84,7 @@ class minimizer:
         diffs = [abs(boundaries[i]-boundaries[i+1])
                  for i in range(len(boundaries)-1)]
         if any(x <= 0.01 for x in diffs):
+            self.res[999] = 999
             self.res_uncs[999] = 999
             self.signal_strengths[999] = 999
             return 999
@@ -106,9 +109,12 @@ class minimizer:
         res = w_sigma/w_mean
         res_err = res * np.sqrt((w_mean_unc/w_mean) **
                                 2 + (w_sigma_unc/w_sigma)**2)
-        self.res_uncs[res] = res_err
-        self.signal_strengths[res] = np.sqrt(sorb)
-        return res
+        ret = 1000*res/np.sqrt(sorb)
+        self.res[ret] = res
+        self.res_uncs[ret] = res_err
+        self.signal_strengths[ret] = np.sqrt(sorb)
+        # print(boundaries, round(ret,6), round(100*res,4), round(np.sqrt(sorb),4))
+        return ret
 
     def optimize_boundaries(self):
         """ optimizes the location of the boundaries by minimizing the target function """
@@ -117,8 +123,9 @@ class minimizer:
                            self.boundaries,
                            method='L-BFGS-B',
                            bounds=self.bounds,
-                           options={'eps': eps})
-        return optimum.fun, self.res_uncs[optimum.fun], optimum.x, self.signal_strengths[optimum.fun]
+                           options={'eps': eps}
+                           )
+        return self.res[optimum.fun], self.res_uncs[optimum.fun], optimum.x, self.signal_strengths[optimum.fun]
 
     def run(self):
         """ runs the minimizer """
@@ -128,7 +135,7 @@ class minimizer:
             self.create_categories(use_bounds=False)
             val, val_unc, optimum, s_over_root_b = self.optimize_boundaries()
             logging.info(f' iter{i}: {100*round(val,6)} +/- {100*round(val_unc,6)}, {round(s_over_root_b,3)}, {optimum}')
-            if val < self.minimum:
+            if val < self.minimum and s_over_root_b > self.s_over_root_b:
                 self.optimal_boundaries = optimum.copy()
                 self.minimum = val
                 self.min_unc = val_unc

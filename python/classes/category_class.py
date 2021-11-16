@@ -8,18 +8,21 @@ class mva_category:
     """ class to describe diphoton mva categories """
 
     def __init__(self, invmass, weights, is_signal) -> None:
+
         self.range = self.weighted_quantile(invmass, weights, 0.683)
         mask = np.logical_and(
             self.range[0] <= invmass, invmass <= self.range[1])
         self.mean = np.average(invmass[mask], weights=weights[mask])
         self.variance = np.average(
             np.power((invmass[mask] - self.mean), 2), weights=weights[mask])
-        # print(self.range, np.sqrt(self.variance), self.mean, np.sqrt(self.variance)/self.mean)
         self.err_variance = self.get_err_variance(invmass[mask], weights[mask])
         self.err_mean = np.sqrt(self.variance)/np.sum(mask)
         signal_weights = weights[np.logical_and(is_signal,mask)]
         bkg_weights = weights[np.logical_and(np.logical_not(is_signal),mask)]
-        self.s_over_root_b = np.sum(signal_weights)/np.sqrt(np.sum(bkg_weights))
+        if len(bkg_weights) > 0:
+            self.s_over_root_b = np.sum(signal_weights)/np.sqrt(np.sum(bkg_weights))
+        else:
+            self.s_over_root_b = 0
 
     def get_err_variance(self, x, w):
         """ uncertainty on variance is (m4 - m2^2) / (4 n m2)"""

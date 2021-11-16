@@ -127,9 +127,9 @@ def plot_stacked_hists(hists, bins, bin_errors, labels, output_tag, bounds):
             next_hist.insert(0, next_hist[0])
             next_hist.insert(-1, next_hist[-1])
 
-        axs.fill_between(mids_full, hist_full,
-                         y2=next_hist, step='mid',
-                         alpha=1, color=stack_colors[::-1][i])
+        #axs.fill_between(mids_full, hist_full,
+        #                 y2=next_hist, step='mid',
+        #                 alpha=1, color=stack_colors[::-1][i])
 
         errorbar = axs.errorbar(mids, hist,
                                 xerr=x_err, yerr=bin_errors[i],

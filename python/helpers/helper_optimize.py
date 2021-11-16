@@ -55,7 +55,7 @@ def extract_data(args):
             plot.xcheck_plot(df, line_list[3])
 
     if _kStackPlot:
-        sig = ([pd.concat(sig_files)], ["100*signal"])
+        sig = ([pd.concat(sig_files)], ["1000*signal"])
         bkg = (bkg_files, bkg_titles)
         plot.stack_plot(sig, bkg, output_title, bounds=args.boundaries)
 
