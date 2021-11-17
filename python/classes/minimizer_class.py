@@ -134,8 +134,8 @@ class minimizer:
             self.res_uncs = {}
             self.create_categories(use_bounds=False)
             val, val_unc, optimum, s_over_root_b = self.optimize_boundaries()
-            logging.info(f' iter{i}: {100*round(val,6)} +/- {100*round(val_unc,6)}, {round(s_over_root_b,3)}, {optimum}')
             if val < self.minimum and s_over_root_b > self.s_over_root_b:
+                logging.info(f' iter{i}: {100*round(val,6)} +/- {100*round(val_unc,6)}, {round(s_over_root_b,3)}, {optimum}')
                 self.optimal_boundaries = optimum.copy()
                 self.minimum = val
                 self.min_unc = val_unc
