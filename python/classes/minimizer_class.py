@@ -125,7 +125,7 @@ class minimizer:
                            bounds=self.bounds,
                            options={'eps': eps}
                            )
-        return self.res[optimum.fun], self.res_uncs[optimum.fun], optimum.x, self.signal_strengths[optimum.fun]
+        return optimum.fun, self.res[optimum.fun], self.res_uncs[optimum.fun], optimum.x, self.signal_strengths[optimum.fun]
 
     def run(self):
         """ runs the minimizer """
@@ -133,10 +133,10 @@ class minimizer:
             self.update_bounds()
             self.res_uncs = {}
             self.create_categories(use_bounds=False)
-            val, val_unc, optimum, s_over_root_b = self.optimize_boundaries()
-            if val < self.minimum and s_over_root_b > self.s_over_root_b:
+            fun, val, val_unc, optimum, s_over_root_b = self.optimize_boundaries()
+            if fun < self.minimum:
                 logging.info(f' iter{i}: {100*round(val,6)} +/- {100*round(val_unc,6)}, {round(s_over_root_b,3)}, {optimum}')
                 self.optimal_boundaries = optimum.copy()
-                self.minimum = val
+                self.minimum = fun
                 self.min_unc = val_unc
                 self.s_over_root_b = s_over_root_b
