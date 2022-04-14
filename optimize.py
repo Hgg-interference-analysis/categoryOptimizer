@@ -30,10 +30,10 @@ def main():
                         help='number of categories to optimize')
     parser.add_argument("--num-iter", default=10, type=int, dest='iters',
                         help='number of times to run the minimizer')
-    parser.add_argument("--lumi-scale", default=1., type=float, dest='lumi',
+    parser.add_argument("--lumi-scale", default=[1.,1.,1.], type=float, dest='lumi', nargs="*", 
                         help="luminosity of this dataset")
     parser.add_argument("--bkg-scale", default=1., type=float, dest='bkg_scale',
-                        help="scale for background file weights, use python/utils/derive_bkg_scale.py")
+                        help="scale for background file weights, use python/utils/derive_bkg_scale.ppy")
     parser.add_argument("--xcheck", default=False, action='store_true',
                         help='plots variables for each file')
     parser.add_argument("--plot", default=False, action='store_true',
@@ -66,7 +66,7 @@ def main():
     logging.info(log_string)
     log_string = f'The associated resolution is {opt_res} +/- {opt_res_err}'
     logging.info(log_string)
-    log_string = f'The s.o.r.b. is {opt_sorb}'
+    log_string = f'The s.o.r.b. is {round(opt_sorb,3)}'
     logging.info(log_string)
 
 

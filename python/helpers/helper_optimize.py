@@ -41,18 +41,19 @@ def extract_data(args):
 
     for line in config:
         line_list = line.split('\t')
-        logging.info("[INFO] opening {} as dataframe".format(line_list[1]))
-        df = pd.DataFrame()
+        logging.info("[INFO] opening {} as dataframe".format(line_list[2]))
+        df = up.open(line_list[2])[line_list[1]].pandas.df(keep_cols)
+        year_index = 0*('16' in line_list[2]) + 1*('17' in line_list[2]) + 2*('18' in line_list[2])
+        df['weight'] = lumi_scale[year_index] * df['weight'].values
         if line_list[0].find('bkg') != -1:
-            df = up.open(line_list[2])[line_list[1]].pandas.df(keep_cols)
             bkg_files.append(df)
             bkg_titles.append(line_list[3])
         else:
-            df = up.open(line_list[2])[line_list[1]].pandas.df(keep_cols)
             sig_files.append(df)
             sig_titles.append(line_list[3])
         if _kXcheckPlot:
             plot.xcheck_plot(df, line_list[3])
+
 
     if _kStackPlot:
         sig = ([pd.concat(sig_files)], ["1000*signal"])
@@ -61,9 +62,6 @@ def extract_data(args):
 
     df_bkg = pd.concat(bkg_files)
     df_sig = pd.concat(sig_files)
-
-    df_sig['weight'] = lumi_scale * df_sig['weight'].values
-    df_bkg['weight'] = lumi_scale * bkg_scale * df_bkg['weight'].values
 
     df_sig['is_signal'] = [True for i in range(len(df_sig))]
     df_bkg['is_signal'] = [False for i in range(len(df_bkg))]

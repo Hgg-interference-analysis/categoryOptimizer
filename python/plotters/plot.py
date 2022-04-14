@@ -22,9 +22,6 @@ def xcheck_plot(df, output_tag):
 def stack_plot(sig, bkg, output_tag, bounds=[]):
     """ makes a stacked histogram plot """
 
-    lumi_scale = 41.5 # 2017 luminosity
-    bkg_scale = 2.76  # side-band estimate of num bkg events
-
     sig_dfs, sig_titles = sig
     bkg_dfs, bkg_titles = bkg
 

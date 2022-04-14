@@ -140,8 +140,10 @@ def plot_stacked_hists(hists, bins, bin_errors, labels, output_tag, bounds):
                         color=stack_colors[::-1][i], alpha=0.5)
         handels.append((fill[0], errorbar[0]))
 
+    plot_min = 0.3
+    plot_max = 10**11
     for i,bound in enumerate(bounds):
-        axs.plot([bound, bound], [0.3, 10**7], 
+        axs.plot([bound, bound], [plot_min, plot_max], 
                 color='black', linestyle=(0, (5, 5)), markersize=0)
         axs.annotate(f"Untagged {len(bounds)-1-i}", (bound, 0.3), xycoords='data',
                     ha='left', va='bottom', rotation=270)
@@ -150,12 +152,12 @@ def plot_stacked_hists(hists, bins, bin_errors, labels, output_tag, bounds):
 
     axs.set_xlabel("Diphoton MVA Score", ha='right', x=1.)
     axs.set_ylabel("Events / 0.02", ha='right', y=1.)
-    plt.ylim(0.3, 10**7)
+    plt.ylim(plot_min, plot_max)
     axs.set_yscale('log')
     axs.annotate("$\\bf{CMS} \ \\it{Simulation \ Preliminary}$",
                 xy=(0,1), xycoords="axes fraction",
                 ha='left', va='bottom')
-    axs.annotate('41.5 fb$^{-1}$ (13 TeV) 2017',
+    axs.annotate('126 fb$^{-1}$ (13 TeV) Run 2',
                 xy=(1,1), xycoords="axes fraction",
                 ha='right', va='bottom')
 
