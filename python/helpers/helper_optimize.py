@@ -24,9 +24,10 @@ def extract_data(args):
     #open args
     cfg_file = args.inputFile
     _kXcheckPlot = args.xcheck
-    _kStackPlot = args.plot    
+    _kStackPlot = args.plot
     output_title = args.output
     lumi_scale = args.lumi
+    lumi_scale_bkg = args.lumi_bkg
     bkg_scale = args.bkg_scale
     #open and load the data
     config = open(cfg_file, 'r').readlines()
@@ -44,11 +45,12 @@ def extract_data(args):
         logging.info("[INFO] opening {} as dataframe".format(line_list[2]))
         df = up.open(line_list[2])[line_list[1]].pandas.df(keep_cols)
         year_index = 0*('16' in line_list[2]) + 1*('17' in line_list[2]) + 2*('18' in line_list[2])
-        df['weight'] = lumi_scale[year_index] * df['weight'].values
         if line_list[0].find('bkg') != -1:
+            df['weight'] = lumi_scale_bkg[year_index] * df['weight'].values
             bkg_files.append(df)
             bkg_titles.append(line_list[3])
         else:
+            df['weight'] = lumi_scale[year_index] * df['weight'].values
             sig_files.append(df)
             sig_titles.append(line_list[3])
         if _kXcheckPlot:
@@ -58,7 +60,7 @@ def extract_data(args):
     if _kStackPlot:
         sig = ([pd.concat(sig_files)], ["1000*signal"])
         bkg = (bkg_files, bkg_titles)
-        plot.stack_plot(sig, bkg, output_title, bounds=args.boundaries)
+        plot.stack_plot(sig, bkg, output_title, lumi_scale, bounds=args.boundaries)
 
     df_bkg = pd.concat(bkg_files)
     df_sig = pd.concat(sig_files)

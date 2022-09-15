@@ -31,10 +31,11 @@ def main():
                         help='boundaries to check')
     parser.add_argument("--transform", default=False, action="store_true",
                         help="will transform the values into the new mva space")
-    parser.add_argument("--lumi-scale", default=1., type=float, dest='lumi',    
+    parser.add_argument("--lumi-scale", default=[1.,1.,1.], type=float, dest='lumi', nargs="*",
                         help="luminosity of this dataset")
     parser.add_argument("--bkg-scale", default=1., type=float, dest='bkg_scale',
                         help="scale for background file weights, use python/utils/derive_bkg_scale.py")
+    parser.add_argument("--lumi-bkg", default=[1.,1.,1.], type=float, dest="lumi_bkg", nargs="*")
 
     args = parser.parse_args()
 
@@ -58,15 +59,16 @@ def main():
     my_minimizer.update_bounds()
     my_minimizer.create_categories(use_bounds=True)
 
-    res = my_minimizer.target(my_minimizer.boundaries)
-    res_err = my_minimizer.res_uncs[res]
-    sorb = my_minimizer.signal_strengths[res]
+    ret = my_minimizer.target(my_minimizer.boundaries)
+    res = my_minimizer.res[ret]
+    res_err = my_minimizer.res_uncs[ret]
+    sorb = my_minimizer.signal_strengths[ret]
 
     print()
     print(f'The boundaries we are testing are {[round(x,4) for x in old_bounds]}')
     if args.transform:
         print(f'The transformed values are {[round(x,4) for x in args.boundaries]}')
-    print(f'The associated resolution is {round(100*res,4)} +/- {round(100*res_err,4)} %')
+    print(f'The associated resolution is {round(res,4)} +/- {round(res_err,4)} %')
     print(f'The s.o.r.b. is {round(sorb,2)}')
 
 

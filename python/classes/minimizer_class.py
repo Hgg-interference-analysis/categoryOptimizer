@@ -37,6 +37,33 @@ class minimizer:
         self.signal_strengths = {}
         self.sort_data()
 
+    def get_combined_resolution(self):
+        # returns the combined relative resolution
+        sigma = 0
+        sigma_weight = 0
+        mean = 0
+        mean_weight = 0
+        for cat in self.cats:
+            sigma += cat.variance / cat.err_variance
+            sigma_weight += 1 / cat.err_variance
+            mean += cat.mean / cat.err_mean**2
+            mean_weight += 1 / cat.err_mean**2
+        if mean_weight == 0:
+            return 999, 999
+        w_mean = mean/mean_weight
+        w_mean_unc = np.sqrt(1/mean_weight)
+        w_sigma = np.sqrt(sigma/sigma_weight)
+        w_sigma_unc = np.sqrt(1/sigma_weight)
+        res = w_sigma/w_mean
+        res_err = res * np.sqrt((w_mean_unc/w_mean)**2 
+                                + (w_sigma_unc/w_sigma)**2)
+        
+        return res, res_err
+
+    def get_sorb(self):
+        # returns the S over root B
+        return sum(cat.s_over_root_b**2 for cat in self.cats)
+
     def sort_data(self):
         """ sorts data for faster quantile evaluation """
         sorter = np.argsort(self.mass)
@@ -81,6 +108,8 @@ class minimizer:
 
     def target(self, boundaries):
         """ target function to minimize """
+
+        # don't allow boundaries that are too small
         diffs = [abs(boundaries[i]-boundaries[i+1])
                  for i in range(len(boundaries)-1)]
         if any(x <= 0.01 for x in diffs):
@@ -88,27 +117,21 @@ class minimizer:
             self.res_uncs[999] = 999
             self.signal_strengths[999] = 999
             return 999
+
+        # assign and sort the boundaries, and create the categories
         self.boundaries = boundaries
         self.boundaries.sort()
         self.create_categories(use_bounds=True)
-        sigma = 0
-        sigma_weight = 0
-        mean = 0
-        mean_weight = 0
-        sorb = 0
-        for cat in self.cats:
-            sigma += cat.variance / cat.err_variance
-            sigma_weight += 1 / cat.err_variance
-            mean += cat.mean / cat.err_mean**2
-            mean_weight += 1 / cat.err_mean**2
-            sorb += cat.s_over_root_b**2
-        w_mean = mean/mean_weight
-        w_mean_unc = np.sqrt(1/mean_weight)
-        w_sigma = np.sqrt(sigma/sigma_weight)
-        w_sigma_unc = np.sqrt(1/sigma_weight)
-        res = w_sigma/w_mean
-        res_err = res * np.sqrt((w_mean_unc/w_mean) **
-                                2 + (w_sigma_unc/w_sigma)**2)
+
+        # evaluate the loss function
+        if any(self.cats[i].err_mean == 0 for i in range(len(self.cats))):
+            self.res[999] = 999
+            self.res_uncs[999] = 999
+            self.signal_strengths[999] = 999
+            return 999
+            
+        res, res_err = self.get_combined_resolution()
+        sorb = self.get_sorb()
         ret = 1000*res/np.sqrt(sorb)
         self.res[ret] = res
         self.res_uncs[ret] = res_err
@@ -135,6 +158,7 @@ class minimizer:
             self.create_categories(use_bounds=False)
             fun, val, val_unc, optimum, s_over_root_b = self.optimize_boundaries()
             if fun < self.minimum:
+                optimum.sort()
                 logging.info(f' iter{i}: {100*round(val,6)} +/- {100*round(val_unc,6)}, {round(s_over_root_b,3)}, {optimum}')
                 self.optimal_boundaries = optimum.copy()
                 self.minimum = fun

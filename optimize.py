@@ -31,9 +31,11 @@ def main():
     parser.add_argument("--num-iter", default=10, type=int, dest='iters',
                         help='number of times to run the minimizer')
     parser.add_argument("--lumi-scale", default=[1.,1.,1.], type=float, dest='lumi', nargs="*", 
-                        help="luminosity of this dataset")
+                        help="luminosity of this dataset, to be applied to signal")
+    parser.add_argument("--lumi-scale-bkg", default=[1.,1.,1.], type=float, dest='lumi_bkg', nargs="*", 
+                        help="luminosity of this dataset, to be applied to background")
     parser.add_argument("--bkg-scale", default=1., type=float, dest='bkg_scale',
-                        help="scale for background file weights, use python/utils/derive_bkg_scale.ppy")
+                        help="scale for background file weights, use python/utils/derive_bkg_scale.py")
     parser.add_argument("--xcheck", default=False, action='store_true',
                         help='plots variables for each file')
     parser.add_argument("--plot", default=False, action='store_true',

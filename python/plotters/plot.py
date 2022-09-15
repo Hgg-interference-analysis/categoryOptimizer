@@ -15,11 +15,11 @@ def xcheck_plot(df, output_tag):
         if col in do_not_plot:
             continue
         plot.plot_df_var(col, df[col].values, df['weight'].values, output_tag)
-    
+
     return
 
 
-def stack_plot(sig, bkg, output_tag, bounds=[]):
+def stack_plot(sig, bkg, output_tag, lumi_scale, bounds=[]):
     """ makes a stacked histogram plot """
 
     sig_dfs, sig_titles = sig
@@ -28,8 +28,8 @@ def stack_plot(sig, bkg, output_tag, bounds=[]):
     labels = list(sig_titles) + list(bkg_titles)
 
     # collect signal and background
-    hists_sig, err_sig, bins = plot.collect_hists(sig_dfs, lumi_scale=lumi_scale*1000)
-    hists_bkg, err_bkg, bins = plot.collect_hists(bkg_dfs, lumi_scale=lumi_scale, bkg_scale=bkg_scale)
+    hists_sig, err_sig, bins = plot.collect_hists(sig_dfs, sig_titles, scale=[1000,1000,1000])
+    hists_bkg, err_bkg, bins = plot.collect_hists(bkg_dfs, bkg_titles, scale=lumi_scale)
 
     # create stack plots
     stack_hist = np.zeros(len(bins)-1)
@@ -42,5 +42,5 @@ def stack_plot(sig, bkg, output_tag, bounds=[]):
     #hists_bkg = hists_bkg[::-1]
     hists = hists_sig + hists_bkg
     bin_errors = err_sig + err_bkg
-    
+
     plot.plot_stacked_hists(hists, bins, bin_errors, labels, output_tag, bounds)

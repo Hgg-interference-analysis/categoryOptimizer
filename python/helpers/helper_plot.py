@@ -82,7 +82,7 @@ def plot_df_var(var_name, values, weights, output_tag):
     plt.close(fig)
 
 
-def collect_hists(dfs, lumi_scale=1., bkg_scale=1.):
+def collect_hists(dfs, titles, scale=[]):
     """ returns histograms from a list of dataframes """
 
     hists = []
@@ -91,9 +91,10 @@ def collect_hists(dfs, lumi_scale=1., bkg_scale=1.):
     num_bins = 50
 
     for i, df in enumerate(dfs):
-        hist, bins = np.histogram(df['diphoton_mva'].values, bins=num_bins, range=[
-                                  0, 1], weights=df['weight'].values)
-        hist = lumi_scale * hist
+        scale_index = 0*('16' in titles[i]) + 1*('17' in titles[i]) + 2*('18' in titles[i])
+        hist, bins = np.histogram(df['diphoton_mva'].values, bins=num_bins,
+                                  range=[0, 1], weights=df['weight'].values)
+        hist = scale[scale_index] * hist
         bin_errors.append(get_bin_uncertainties(
             bins, df['diphoton_mva'].values, df['weight'].values))
         hists.append(np.copy(hist))
@@ -133,22 +134,22 @@ def plot_stacked_hists(hists, bins, bin_errors, labels, output_tag, bounds):
 
         errorbar = axs.errorbar(mids, hist,
                                 xerr=x_err, yerr=bin_errors[i],
-                                drawstyle='steps-mid', capsize=0., 
+                                drawstyle='steps-mid', capsize=0.,
                                 linewidth=3,
                                 color=stack_colors[::-1][i])
-        fill = axs.fill(np.NaN, np.NaN, 
+        fill = axs.fill(np.NaN, np.NaN,
                         color=stack_colors[::-1][i], alpha=0.5)
         handels.append((fill[0], errorbar[0]))
 
     plot_min = 0.3
     plot_max = 10**11
     for i,bound in enumerate(bounds):
-        axs.plot([bound, bound], [plot_min, plot_max], 
+        axs.plot([bound, bound], [plot_min, plot_max],
                 color='black', linestyle=(0, (5, 5)), markersize=0)
         axs.annotate(f"Untagged {len(bounds)-1-i}", (bound, 0.3), xycoords='data',
                     ha='left', va='bottom', rotation=270)
 
-    axs.legend(handels, [f'{x}' for x in labels], loc='upper right')
+    axs.legend(handels, [f'{x}' for x in labels], loc='upper left')
 
     axs.set_xlabel("Diphoton MVA Score", ha='right', x=1.)
     axs.set_ylabel("Events / 0.02", ha='right', y=1.)
