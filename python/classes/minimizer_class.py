@@ -12,7 +12,7 @@ from python.classes.category_class import mva_category
 
 class minimizer:
 
-    def __init__(self, data, num_cats, num_tests=10) -> None:
+    def __init__(self, data, num_cats, num_tests=10, seed=None) -> None:
         self.mva = np.array(data['diphoton_mva'].values)
         self.mass = np.array(data['CMS_hgg_mass'].values)
         self.weights = np.array(data['weight'].values)
@@ -35,6 +35,8 @@ class minimizer:
         self.res = {}
         self.res_uncs = {}
         self.signal_strengths = {}
+        self.seed = seed
+        self.first = True
         self.sort_data()
 
     def get_combined_resolution(self):
@@ -61,8 +63,8 @@ class minimizer:
         return res, res_err
 
     def get_sorb(self):
-        # returns the S over root B
-        return sum(cat.s_over_root_b**2 for cat in self.cats)
+        # returns the quad added S over root B for each category
+        return np.sum(cat.sig**2/cat.bkg for cat in self.cats)
 
     def sort_data(self):
         """ sorts data for faster quantile evaluation """
@@ -103,8 +105,12 @@ class minimizer:
                 lower = self.boundaries[i]
                 upper = self.boundaries[i+1] if i+1 < len(self.boundaries) else 1.0
                 mask = np.logical_and(lower <= self.mva, self.mva <= upper)
-                self.cats.append(mva_category(
-                    self.mass[mask], self.weights[mask], self.sig_bkg[mask]))
+                self.cats.append(
+                    mva_category(self.mass[mask], 
+                                 self.weights[mask], 
+                                 self.sig_bkg[mask], 
+                                 )
+                                 )
 
     def target(self, boundaries):
         """ target function to minimize """
@@ -119,24 +125,25 @@ class minimizer:
             return 999
 
         # assign and sort the boundaries, and create the categories
-        self.boundaries = boundaries
+        self.boundaries = boundaries 
         self.boundaries.sort()
         self.create_categories(use_bounds=True)
-
-        # evaluate the loss function
-        if any(self.cats[i].err_mean == 0 for i in range(len(self.cats))):
-            self.res[999] = 999
-            self.res_uncs[999] = 999
-            self.signal_strengths[999] = 999
-            return 999
             
         res, res_err = self.get_combined_resolution()
         sorb = self.get_sorb()
-        ret = 1000*res/np.sqrt(sorb)
+        ret = 999
+        if sorb != 0:
+            ret = 1000*res/sorb
         self.res[ret] = res
         self.res_uncs[ret] = res_err
-        self.signal_strengths[ret] = np.sqrt(sorb)
-        # print(boundaries, round(ret,6), round(100*res,4), round(np.sqrt(sorb),4))
+        self.signal_strengths[ret] = sorb
+
+
+        #print(f"{[round(x,4) for x in boundaries]} {round(ret,4)} {[round(100*np.sqrt(cat.variance)/cat.mean,4) for cat in self.cats]} {[round(cat.sig/np.sqrt(cat.bkg),2) for cat in self.cats]}")
+        if not ret:
+            self.max_mva = self.max_mva-0.001
+            self.bounds[-1][1] = self.max_mva
+
         return ret
 
     def optimize_boundaries(self):
@@ -155,11 +162,16 @@ class minimizer:
         for i in range(self.num_tests):
             self.update_bounds()
             self.res_uncs = {}
-            self.create_categories(use_bounds=False)
+            if self.seed and i==0:
+                self.boundaries = self.seed
+                self.create_categories(use_bounds=True)
+            else:
+                self.create_categories(use_bounds=False)
             fun, val, val_unc, optimum, s_over_root_b = self.optimize_boundaries()
             if fun < self.minimum:
                 optimum.sort()
                 logging.info(f' iter{i}: {100*round(val,6)} +/- {100*round(val_unc,6)}, {round(s_over_root_b,3)}, {optimum}')
+                #logging.info(f'{[cat.sig/np.sqrt(cat.bkg) for cat in self.cats]}')
                 self.optimal_boundaries = optimum.copy()
                 self.minimum = fun
                 self.min_unc = val_unc

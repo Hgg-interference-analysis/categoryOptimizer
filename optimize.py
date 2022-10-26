@@ -56,7 +56,7 @@ def main():
 
     df_data = pd.concat([df_sig, df_bkg])
     # hand the data off the minimizer
-    my_minimizer = minimizer(df_data, args.n_bounds, num_tests=args.iters)
+    my_minimizer = minimizer(df_data, args.n_bounds, num_tests=args.iters, seed=args.boundaries)
     my_minimizer.run()
 
     opt_bounds = [round(x, 3) for x in my_minimizer.optimal_boundaries]
