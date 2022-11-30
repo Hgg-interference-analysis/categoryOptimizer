@@ -59,8 +59,7 @@ def main():
     my_minimizer = minimizer(df_data, args.n_bounds, num_tests=args.iters, seed=args.boundaries)
     my_minimizer.run()
 
-    opt_bounds = [round(x, 3) for x in my_minimizer.optimal_boundaries]
-    opt_bounds.sort()
+    opt_bounds = [round(x, 6) for x in my_minimizer.optimal_boundaries]
     opt_res = 100*round(my_minimizer.res[my_minimizer.minimum], 6)
     opt_res_err = round(100*my_minimizer.min_unc, 4)
     opt_sorb = my_minimizer.s_over_root_b

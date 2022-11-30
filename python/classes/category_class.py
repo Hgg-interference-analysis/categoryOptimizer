@@ -9,35 +9,29 @@ class mva_category:
 
     def __init__(self, invmass, weights, is_signal, do_sm=True) -> None:
 
-        # evaluate range of 68.3% min interval
-        
+        # check if category is valid
         if sum(weights) < MIN_EVENTS:
             self.set_invalid()
             return
 
-        # select only events in the min interval range
+        # calculate the interquartile range of the signal
         self.range = self.weighted_quantile(invmass[is_signal], weights[is_signal], 0.683)
-        #print(self.range)
-        if len(self.range) == 0 or sum(weights) == 0:
+
+        # check if the range is valid
+        if len(self.range) == 0:
             self.set_invalid()
             return
 
-        mask = np.logical_and(
-            self.range[0] <= invmass, invmass <= self.range[1])
+        # create a mask for events in the range
+        mask = np.logical_and(self.range[0] <= invmass, invmass <= self.range[1])
 
-        #hist, bins = np.histogram(invmass, bins=20, range = self.range, normed=True, weights=weights)
-        #mids = [(bins[i]+bins[i+1])/2 for i in range(len(bins)-1)]
-
-        #plt.scatter(mids,hist,marker='.', color='b')
-        #plt.scatter(mids, hist1, marker='o', color='r')
-        #plt.show()
-
+        # check that the range produces a valid category
         if sum(mask) == 0 or sum(weights[mask]) == 0:
             self.set_invalid()
             return
 
 
-        # sorb stuff
+        # calculate signal and background for s.o.r.b.
         signal_weights = weights[np.logical_and(is_signal, mask)]
         bkg_weights = weights[np.logical_and(np.logical_not(is_signal), mask)]
         if len(bkg_weights) > 0:
@@ -49,15 +43,14 @@ class mva_category:
             self.bkg = np.inf
             self.sig = 0
 
+
         if do_sm:
 
             # evaluate statistical properties of events in min interval range
             self.mean = np.average(invmass[mask], weights=weights[mask])
-            self.variance = np.average(
-                np.power((invmass[mask] - self.mean), 2), weights=weights[mask])
+            self.variance = np.average(np.power((invmass[mask] - self.mean), 2), weights=weights[mask])
             self.err_mean = np.sqrt(self.variance)/np.sum(mask)
-            self.err_variance = self.get_err_variance(
-                invmass[mask], weights[mask])
+            self.err_variance = self.get_err_variance(invmass[mask], weights[mask])
 
     def get_err_variance(self, x, w):
         """ uncertainty on variance is (m4 - m2^2) / (4 n m2)"""
@@ -81,6 +74,8 @@ class mva_category:
 
 
     def set_invalid(self):
+        """ sets values to 0 or inf to deactivate category """
+        
         self.mean = 0.0
         self.variance = np.inf
         self.err_variance = np.inf
