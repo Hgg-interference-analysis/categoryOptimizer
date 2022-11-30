@@ -17,11 +17,14 @@ def main():
     fig, ax = plt.subplots(1,1)
 
     ax.plot(x_vals, args.minima, label="Category Minima", marker='.')
+
     ax.set_xlabel("Number of Categories")
+    plt.xticks([ 2, 3, 4, 5, 6])
+
     ax.set_ylabel("Minimum [A.U.]")
     ax.legend(loc='best')
 
-    fig.savefig(f'optNumCats_{args.output}.png')
+    fig.savefig(f'optNumCats_{args.output}.png', bbox_inches="tight")
     
 
 if __name__ == "__main__":
