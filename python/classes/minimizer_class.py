@@ -25,7 +25,7 @@ class minimizer:
         self.num_cats = num_cats
         self.num_tests = num_tests
         self.min_mva = min(self.mva)+0.025
-        self.max_mva = max(self.mva)-0.005
+        self.max_mva = max(self.mva)-0.025
         self.cats = []
         self.boundaries = []
         self.bounds = []
@@ -84,6 +84,7 @@ class minimizer:
             b = (self.min_mva if i == 0 else self.boundaries[i-1]+0.001, self.max_mva if i == len(self.boundaries)-1 else self.boundaries[i+1]-0.001)
             self.bounds.append(b)
 
+
     def create_categories(self, use_bounds=False):
         """ creates categories for the minimizer """
 
@@ -92,12 +93,14 @@ class minimizer:
             self.cats = []
 
         # generate the boundaries at random, create categories from these boundaries
+
         if not use_bounds:
 
             # generate the boundaries
             self.boundaries = []
             self.boundaries = [rand.uniform(self.min_mva, self.max_mva) for i in range(self.num_cats)]
             self.boundaries.sort()
+
 
             # create the categories
             for i in range(self.num_cats):
@@ -116,10 +119,11 @@ class minimizer:
                 mask = np.logical_and(lower <= self.mva, self.mva <= upper)
                 self.cats.append(
                     mva_category(self.mass[mask], 
-                                 self.weights[mask], 
-                                 self.sig_bkg[mask], 
-                                 )
-                                 )
+                                self.weights[mask], 
+                                self.sig_bkg[mask], 
+                    )
+                )
+
 
     def target(self, boundaries):
         """ target function to minimize """
@@ -133,7 +137,7 @@ class minimizer:
         res, res_err = self.get_combined_resolution()
         sorb = self.get_sorb()
         ret = 999
-        if sorb != 0:
+        if sorb != 0 and not np.isnan(sorb):
             ret = 1000*res/sorb
         self.res[ret] = res
         self.res_uncs[ret] = res_err
@@ -153,6 +157,8 @@ class minimizer:
                            bounds=self.bounds
                            )
         
+        if np.isnan(optimum.fun):
+            return np.inf, 999, 999, optimum.x, [-1 for x in range(4)]
         return optimum.fun, self.res[optimum.fun], self.res_uncs[optimum.fun], optimum.x, self.signal_strengths[optimum.fun]
 
 

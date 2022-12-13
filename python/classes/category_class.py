@@ -9,6 +9,7 @@ class mva_category:
 
     def __init__(self, invmass, weights, is_signal, do_sm=True) -> None:
 
+        self.invalid = False
         # check if category is valid
         if sum(weights) < MIN_EVENTS:
             self.set_invalid()
@@ -75,7 +76,7 @@ class mva_category:
 
     def set_invalid(self):
         """ sets values to 0 or inf to deactivate category """
-        
+        self.invalid = True
         self.mean = 0.0
         self.variance = np.inf
         self.err_variance = np.inf
