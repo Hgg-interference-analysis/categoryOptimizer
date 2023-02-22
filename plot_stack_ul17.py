@@ -11,12 +11,21 @@ def main():
     MC_TO_DD = 2.7312491505102288
 
     bkg_files_dd = [
-        ("tagsDumper/trees/Data_13TeV_UntaggedTag_0", "./rootFiles/output_data_UL2017.root", "UL17 Data Sidebands")]
+        # ("tagsDumper/trees/Data_13TeV_UntaggedTag_0", "./rootFiles/output_data_UL2017.root", "UL17 Data Sidebands")]
+        # ("pp", "./rootFiles/data/ul16_preVFP/ul16_preVFP_prompt-prompt_newBDT.root", "UL16 PreVFP prompt-rompt"),
+        # ("pp", "./rootFiles/data/ul16_postVFP/ul16_postVFP_prompt-prompt_newBDT.root", "UL16 PostVFP prompt-rompt"),
+        # ("DataDriven_QCD", "./rootFiles/data/ul16_preVFP/ul16_preVFP_prompt-fake_fake-fake_newBDT.root", "UL16 PreVFP prompt-rompt"),
+        # ("DataDriven_QCD", "./rootFiles/data/ul16_postVFP/ul16_postVFP_prompt-fake_fake-fake_newBDT.root", "UL16 PostVFP prompt-rompt"),
+    ]
     bkg_files_mc = [
-        ("pp","./rootFiles/ul18_dataDriven_newBDT_prompt-prompt_bkg.root", "prompt-prompt"),
-        ("DataDriven_QCD","./rootFiles/ul18_dataDriven_newBDT_prompt-fake_fake-fake_bkg.root", "prompt-fake + fake-fake"),
+        # ("pp","./rootFiles/ul18_dataDriven_newBDT_prompt-prompt_bkg.root", "prompt-prompt"),
+        # ("DataDriven_QCD","./rootFiles/ul18_dataDriven_newBDT_prompt-fake_fake-fake_bkg.root", "prompt-fake + fake-fake"),
         #("pp","./rootFiles/data_driven_prompt-prompt_ul17.root", "prompt-prompt"),
         #("DataDriven_QCD","./rootFiles/data_driven_prompt-fake_fake-fake_ul17.root", "prompt-fake + fake-fake"),
+        # ("pp", "./rootFiles/data/ul16_preVFP/ul16_preVFP_prompt-prompt_newBDT.root", "UL16 PreVFP prompt-prompt"),
+        # ("DataDriven_QCD", "./rootFiles/data/ul16_preVFP/ul16_preVFP_prompt-fake_fake-fake_newBDT.root", "UL16 PreVFP prompt-fake + fake-fake"),
+        ("pp", "./rootFiles/data/ul16_postVFP/ul16_postVFP_prompt-prompt_newBDT.root", "UL16 PostVFP prompt-prompt"),
+        ("DataDriven_QCD", "./rootFiles/data/ul16_postVFP/ul16_postVFP_prompt-fake_fake-fake_newBDT.root", "UL16 PostVFP prompt-fake + fake-fake"),
     ]
 
     sig_files_mc = [
@@ -35,6 +44,9 @@ def main():
         #("tagsDumper/trees/wh_125_13TeV_UntaggedTag_0","./rootFiles/ul18_newDMVA_wh.root","ul18 vh_M125"),
         #("tagsDumper/trees/vbf_125_13TeV_UntaggedTag_0","./rootFiles/ul18_newDMVA_vbf.root","ul18 vbf_M125"),
         #("tagsDumper/trees/tth_125_13TeV_UntaggedTag_0","./rootFiles/ul18_newDMVA_tth.root","ul18 ttH_M125"),
+        # ("Sig125", "./rootFiles/data/ul16_preVFP/ul16_preVFP_signal_newBDT.root", "UL16 PreVFP Signal"),
+        ("Sig125", "./rootFiles/data/ul16_postVFP/ul16_postVFP_signal_newBDT.root", "UL16 PostVFP Signal"),
+        # ("Sig125", "./rootFiles/ul18_signal_newBDT.root", "UL18 Signal"),
     ]
 
 
@@ -79,13 +91,15 @@ def main():
 
     fig, ax = plt.subplots(1,1)
 
-    """
-    for i in range(len(hists_bkg_dd)):
-        stack = hists_bkg_dd[0]
-        for j in range(i+1, len(hists_bkg_dd)):
-            stack = np.add(stack, hists_bkg_dd[j])
-        stack_full = [stack[0]]+list(stack)+[stack[-1]]
-        ax.plot(mids, stack, 'k.', label=f"{bkg_files_dd[i][2]}")
+    
+    # for i in range(len(hists_bkg_dd)):
+    #     stack = hists_bkg_dd[0]
+    #     for j in range(i+1, len(hists_bkg_dd)):
+    #         stack = np.add(stack, hists_bkg_dd[j])
+    #     stack_full = [stack[0]]+list(stack)+[stack[-1]]
+    #     ax.plot(mids, stack, 'k.', label=f"{bkg_files_dd[i][2]}")
+
+    
     for i in range(len(hists_bkg_mc)):
         stack = hists_bkg_mc[i]
         for j in range(i+1, len(hists_bkg_mc)):
@@ -96,7 +110,7 @@ def main():
                     xerr=(bins[1]-bins[0])/2,
                     yerr=0,
                     drawstyle="steps-mid", color="black", linewidth=0.5)
-    """
+    
 
     for i in range(len(hists_sig_mc)):
         stack = hists_sig_mc[i]
@@ -110,6 +124,7 @@ def main():
                     drawstyle="steps-mid", color="black", linewidth=0.5)
 
     ax.set_yscale('log')
+    ax.set_ybound(10**(-2), 10**7)
     ax.legend()
     ax.set_ylabel('Event/0.01')
     ax.set_xlabel('Diphoton MVA Score')
