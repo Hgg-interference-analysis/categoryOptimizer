@@ -42,7 +42,7 @@ def main():
                         help='makes the stack plots')
     parser.add_argument("-b", "--boundaries", type=float, default=[], nargs="*", 
                         help="Adds boundaries to the stack plot")
-    parser.add_argument("--log", type=str, default=None, 
+    parser.add_argument("--log", type=str, default=None, required=True,
                         help="name for log file")
     args = parser.parse_args()
 
