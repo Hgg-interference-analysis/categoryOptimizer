@@ -33,7 +33,7 @@ def extract_data(args):
     config = open(cfg_file, 'r').readlines()
     config = [x.strip() for x in config]
 
-    keep_cols = ['CMS_hgg_mass', 'diphoton_mva', 'weight']
+    keep_cols = ['CMS_hgg_mass', 'diphoMVANew', 'weight']    #could modify to give the variable in the config or command line
 
     bkg_files = []
     bkg_titles = []
@@ -44,13 +44,17 @@ def extract_data(args):
         line_list = line.split('\t')
         logging.info("[INFO] opening {} as dataframe".format(line_list[2]))
         df = up.open(line_list[2])[line_list[1]].pandas.df(keep_cols)
-        year_index = 0*('16' in line_list[2]) + 1*('17' in line_list[2]) + 2*('18' in line_list[2])
+        year_index = 1*('16' in line_list[2]) + 2*('17' in line_list[2]) + 3*('18' in line_list[2])  ##I don't have year in the root file name
+        if year_index == 0:
+              raise ValueError("year index = {} does not correspond to 2016, 2017 or 2018, please indicate the year correctly in the legendEntry column in your config file".format(year_index))
+        print("lumi_scale[-1]",lumi_scale[-1])
+        print(" ========> year index = ", year_index)
         if line_list[0].find('bkg') != -1:
-            df['weight'] = lumi_scale_bkg[year_index] * df['weight'].values
+            df['weight'] = lumi_scale_bkg[year_index-1] * df['weight'].values
             bkg_files.append(df)
             bkg_titles.append(line_list[3])
         else:
-            df['weight'] = lumi_scale[year_index] * df['weight'].values
+            df['weight'] = lumi_scale[year_index-1] * df['weight'].values
             sig_files.append(df)
             sig_titles.append(line_list[3])
         if _kXcheckPlot:

@@ -13,7 +13,7 @@ from python.classes.category_class import mva_category
 class minimizer:
 
     def __init__(self, data, num_cats, num_tests=10, seed=None) -> None:
-        self.mva = np.array(data['diphoton_mva'].values)
+        self.mva = np.array(data['diphoMVANew'].values)                       ##should change this to a command line option
         self.mass = np.array(data['CMS_hgg_mass'].values)
         self.weights = np.array(data['weight'].values)
         self.sig_bkg = np.array(data['is_signal'].values)
