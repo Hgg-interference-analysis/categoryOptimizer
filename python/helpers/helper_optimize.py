@@ -44,11 +44,9 @@ def extract_data(args):
         line_list = line.split('\t')
         logging.info("[INFO] opening {} as dataframe".format(line_list[2]))
         df = up.open(line_list[2])[line_list[1]].pandas.df(keep_cols)
-        year_index = 1*('16' in line_list[2]) + 2*('17' in line_list[2]) + 3*('18' in line_list[2])  ##I don't have year in the root file name
+        year_index = 1*('16' in line_list[2]) + 2*('17' in line_list[2]) + 3*('18' in line_list[2])
         if year_index == 0:
               raise ValueError("year index = {} does not correspond to 2016, 2017 or 2018, please indicate the year correctly in the legendEntry column in your config file".format(year_index))
-        print("lumi_scale[-1]",lumi_scale[-1])
-        print(" ========> year index = ", year_index)
         if line_list[0].find('bkg') != -1:
             df['weight'] = lumi_scale_bkg[year_index-1] * df['weight'].values
             bkg_files.append(df)
