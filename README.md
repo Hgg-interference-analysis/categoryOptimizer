@@ -1,5 +1,7 @@
 # Diphoton MVA Optimizer
 
+This repository is forked from [Neil Raymond Schroeder / diphoton mva optimizer](https://gitlab.cern.ch/nschroed/diphoton-mva-optimizer). I'm using the the branch "dev_for_hgg_interference" for developements specific to H-->gamma gamma interference analysis.
+
 This framework derives the optimal diphoton MVA boundaries
 
 ## Motivation
@@ -19,16 +21,11 @@ This code uses the scipy.optimize.minimize and makes use of the Nelder-Mead mini
 
 the installation is fairly straight forward, and requires scipy.
 ```
-git clone ssh://git@gitlab.cern.ch:7999/nschroed/diphoton-mva-optimizer.git
+git clone ssh://git@gitlab.cern.ch:7999/amkrishn/diphoton-mva-optimizer.git
 python -m pip install scipy
 ```
 
-for development please use a new branch:
-```
-git branch <myBranch>
-git push --set-upstream origin <myBranch>
-git checkout <myBranch>
-```
+PS: I used CERNBox and SWAN to work on this project. If you wish to do the same, follow the instructions given [here](https://swan.docs.cern.ch/swan/create_proj/) to create a SWAN project from this repository. Then you can use the SWAN terminal to run the framework.
 
 ## Getting Started
 
@@ -69,5 +66,3 @@ The options are as follows:
 ## Credit
 This framework was developed by Neil Schroeder (University of Minnesota) and is documented in meetings for the Higgs to gamma gamma group.
 
-## Contact
-Please contact Neil Schroeder (or Roger Rusack) with inquiries.
