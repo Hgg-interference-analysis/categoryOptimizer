@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-MIN_EVENTS = 100
+MIN_EVENTS = 1000
 
 class mva_category:
     """ class to describe diphoton mva categories """
@@ -14,9 +14,12 @@ class mva_category:
         if sum(weights) < MIN_EVENTS:
             self.set_invalid()
             return
+        #else:
+            #print("no. of events = ", sum(weights))
 
         # calculate the interquartile range of the signal
         self.range = self.weighted_quantile(invmass[is_signal], weights[is_signal], 0.683)
+        #print("iqr",self.range)
 
         # check if the range is valid
         if len(self.range) == 0:
@@ -28,11 +31,13 @@ class mva_category:
 
         # check that the range produces a valid category
         if sum(mask) == 0 or sum(weights[mask]) == 0:
+            print("sum mask: ",sum(mask))
+            print("sum of weights of mask: ",sum(weights[mask]))
             self.set_invalid()
             return
 
 
-        # calculate signal and background for s.o.r.b.
+        # calculate signal and background yields for s.o.r.b.              
         signal_weights = weights[np.logical_and(is_signal, mask)]
         bkg_weights = weights[np.logical_and(np.logical_not(is_signal), mask)]
         if len(bkg_weights) > 0:
@@ -48,10 +53,17 @@ class mva_category:
         if do_sm:
 
             # evaluate statistical properties of events in min interval range
-            self.mean = np.average(invmass[mask], weights=weights[mask])
+            self.mean = np.average(invmass[mask], weights=weights[mask])     #better to use median instead of mean?
+            #self.median = np.median(invmass[mask])
             self.variance = np.average(np.power((invmass[mask] - self.mean), 2), weights=weights[mask])
             self.err_mean = np.sqrt(self.variance)/np.sum(mask)
             self.err_variance = self.get_err_variance(invmass[mask], weights[mask])
+            #print("mean: ", self.mean)
+            #print("median: ", self.median)
+            #print("mean err: ", self.err_mean)
+            #print("variance: ", self.variance)
+            #print("variance err: ", self.err_variance)
+            
 
     def get_err_variance(self, x, w):
         """ uncertainty on variance is (m4 - m2^2) / (4 n m2)"""

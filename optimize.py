@@ -15,9 +15,11 @@ import python.helpers.helper_optimize as helper_optimize
 from python.classes.minimizer_class import minimizer
 import python.plotters.plot as plot
 import logging
+import time
 
 
 def main():
+    start_time = time.time()
 
     # option management
     parser = ap.ArgumentParser(description="Diphoton MVA Boundary Optimizer")
@@ -40,7 +42,7 @@ def main():
                         help='plots variables for each file')
     parser.add_argument("--plot", default=False, action='store_true',
                         help='makes the stack plots')
-    parser.add_argument("-b", "--boundaries", type=float, default=[], nargs="*", 
+    parser.add_argument("-b", "--boundaries", type=float, default=[], nargs="*",  
                         help="Adds boundaries to the stack plot")
     parser.add_argument("--log", type=str, default=None, required=True,
                         help="name for log file")
@@ -64,11 +66,16 @@ def main():
     opt_res_err = round(100*my_minimizer.min_unc, 4)
     opt_sorb = my_minimizer.s_over_root_b
     log_string = f'the optimal boundaries are {opt_bounds}'
+    print(log_string)
     logging.info(log_string)
     log_string = f'The associated resolution is {opt_res} +/- {opt_res_err}'
+    print(log_string)
     logging.info(log_string)
     log_string = f'The s.o.r.b. is {round(opt_sorb,3)}'
+    print(log_string)
     logging.info(log_string)
+    
+    print("--- time taken = {t:.2f} mins ---".format(t=(time.time() - start_time)/60))
 
 
 if __name__ == "__main__":

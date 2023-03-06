@@ -13,19 +13,20 @@ from python.classes.category_class import mva_category
 class minimizer:
 
     def __init__(self, data, num_cats, num_tests=10, seed=None) -> None:
-        self.mva = np.array(data['diphoMVANew'].values)                       ##should change this to a command line option
+        self.mva = np.array(data['diphoMVANew'].values)                       
         self.mass = np.array(data['CMS_hgg_mass'].values)
         self.weights = np.array(data['weight'].values)
         self.sig_bkg = np.array(data['is_signal'].values)
-        mass_mask = np.logical_and(115 < self.mass, self.mass < 135)
+        mass_mask = np.logical_and(115 < self.mass, self.mass < 135)   
         self.mass = self.mass[mass_mask]
+        #print(self.mass)
         self.mva = self.mva[mass_mask]
         self.weights = self.weights[mass_mask]
         self.sig_bkg = self.sig_bkg[mass_mask]
         self.num_cats = num_cats
         self.num_tests = num_tests
-        self.min_mva = min(self.mva)+0.025
-        self.max_mva = max(self.mva)-0.025
+        self.min_mva = min(self.mva)+0.025    
+        self.max_mva = max(self.mva)-0.025    
         self.cats = []
         self.boundaries = []
         self.bounds = []
@@ -46,8 +47,8 @@ class minimizer:
         mean = 0
         mean_weight = 0
         for cat in self.cats:
-            sigma += cat.variance / cat.err_variance
-            sigma_weight += 1 / cat.err_variance
+            sigma += cat.variance / cat.err_variance    
+            sigma_weight += 1 / cat.err_variance   
             mean += cat.mean / cat.err_mean**2
             mean_weight += 1 / cat.err_mean**2
         if mean_weight == 0:
@@ -83,6 +84,7 @@ class minimizer:
         for i in range(len(self.boundaries)):
             b = (self.min_mva if i == 0 else self.boundaries[i-1]+0.001, self.max_mva if i == len(self.boundaries)-1 else self.boundaries[i+1]-0.001)
             self.bounds.append(b)
+        print("Updated bounds :", self.bounds)
 
 
     def create_categories(self, use_bounds=False):
@@ -92,33 +94,36 @@ class minimizer:
         if len(self.cats) > 0:
             self.cats = []
 
-        # generate the boundaries at random, create categories from these boundaries
+        # generate the boundaries at random , create categories from these boundaries  
 
-        if not use_bounds:
+        #if not use_bounds:
 
-            # generate the boundaries
-            self.boundaries = []
-            self.boundaries = [rand.uniform(self.min_mva, self.max_mva) for i in range(self.num_cats)]
-            self.boundaries.sort()
+            ## generate the boundaries
+            #self.boundaries = []
+            #self.boundaries = [rand.uniform(self.min_mva, self.max_mva) for i in range(self.num_cats)]
+            #self.boundaries.sort()
 
 
+            ## create the categories
+            #for i in range(self.num_cats):
+            #    lower = self.boundaries[i],
+            #    upper = self.boundaries[i + 1] if i != self.num_cats - 1 else 1.0
+            #    mask = np.logical_and(lower <= self.mva, self.mva <= upper)
+            #    self.cats.append(mva_category(
+            #        self.mass[mask], self.weights[mask], self.sig_bkg[mask]))
+
+        ## otherwise use the existing boundaries to generate new categories
+        #else:
             # create the categories
-            for i in range(self.num_cats):
-                lower = self.boundaries[i],
-                upper = self.boundaries[i + 1] if i != self.num_cats - 1 else 1.0
-                mask = np.logical_and(lower <= self.mva, self.mva <= upper)
-                self.cats.append(mva_category(
-                    self.mass[mask], self.weights[mask], self.sig_bkg[mask]))
-
-        # otherwise use the existing boundaries to generate new categories
-        else:
-            # create the categories
-            for i in range(len(self.boundaries)):
-                lower = self.boundaries[i]
-                upper = self.boundaries[i+1] if i+1 < len(self.boundaries) else 1.0
-                mask = np.logical_and(lower <= self.mva, self.mva <= upper)
-                self.cats.append(
-                    mva_category(self.mass[mask], 
+        for i in range(len(self.boundaries)):
+            if len(self.boundaries) != self.num_cats:
+                print("Number of categories do not match the number of boundaries given. Creating only {} categories".format(len(self.boundaries)))
+            lower = self.boundaries[i]
+            upper = self.boundaries[i+1] if i+1 < len(self.boundaries) else 1.0
+            #print("category lower = ", lower)
+            #print("category upper = ", upper)
+            mask = np.logical_and(lower <= self.mva, self.mva <= upper)
+            self.cats.append(mva_category(self.mass[mask], 
                                 self.weights[mask], 
                                 self.sig_bkg[mask], 
                     )
@@ -127,18 +132,19 @@ class minimizer:
 
     def target(self, boundaries):
         """ target function to minimize """
-
         # assign and sort the boundaries, and create the categories
         self.boundaries = boundaries 
-        self.update_bounds()
+        #print("Boundaries :", self.boundaries)
+        #self.update_bounds()
         self.create_categories(use_bounds=True)
+        
             
-        # evalute properties of the current boundaries
+        # evaluate properties of the current boundaries
         res, res_err = self.get_combined_resolution()
         sorb = self.get_sorb()
         ret = 999
         if sorb != 0 and not np.isnan(sorb):
-            ret = 1000*res/sorb
+            ret = 1000*res/sorb    
         self.res[ret] = res
         self.res_uncs[ret] = res_err
         self.signal_strengths[ret] = sorb
@@ -154,7 +160,7 @@ class minimizer:
         optimum = minimize(self.target,
                            self.boundaries,
                            method='Nelder-Mead', # uses a greedy algorithm, it's good to run this many times to find the minimum
-                           bounds=self.bounds
+                           bounds=self.bounds    #bounds=self.bounds   
                            )
         
         if np.isnan(optimum.fun):
@@ -173,12 +179,21 @@ class minimizer:
             # if this is the first run, and a seed is provided, use the seed boundaries
             if self.seed and i==0:
                 self.boundaries = self.seed
-                self.create_categories(use_bounds=True)
+                #self.create_categories(use_bounds=True)
             else:
-                self.create_categories(use_bounds=False)
+                self.boundaries = []
+                self.boundaries = [rand.uniform(self.min_mva, self.max_mva) for i in range(self.num_cats)]
+                self.boundaries.sort()
+                #self.create_categories(use_bounds=False)
+            #print("Boundaries :", self.boundaries)
             
             # update the bounds based on the current boundaries
-            self.update_bounds()
+            #self.update_bounds()
+            self.bounds = []
+            for i in range(self.num_cats):
+                self.bounds.append((-0.9,0.99))
+                
+            #print("bounds = ", self.bounds)
 
             # optimize the current boundaries
             fun, val, val_unc, optimum, s_over_root_b = self.optimize_boundaries()
