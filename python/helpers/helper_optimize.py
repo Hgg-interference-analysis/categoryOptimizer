@@ -33,7 +33,7 @@ def extract_data(args):
     config = open(cfg_file, 'r').readlines()
     config = [x.strip() for x in config]
 
-    keep_cols = ['CMS_hgg_mass', 'diphoMVANew', 'weight']    #could modify to give the variable in the config or command line
+    keep_cols = ['CMS_hgg_mass', 'diphoMVANew', 'pt', 'weight']    
 
     bkg_files = []
     bkg_titles = []
@@ -51,6 +51,7 @@ def extract_data(args):
             df['weight'] = lumi_scale_bkg[year_index-1] * df['weight'].values
             bkg_files.append(df)
             bkg_titles.append(line_list[3])
+        
         else:
             df['weight'] = lumi_scale[year_index-1] * df['weight'].values
             sig_files.append(df)
@@ -66,7 +67,7 @@ def extract_data(args):
 
     df_bkg = pd.concat(bkg_files)
     df_sig = pd.concat(sig_files)
-
+    
     df_sig['is_signal'] = [True for i in range(len(df_sig))]
     df_bkg['is_signal'] = [False for i in range(len(df_bkg))]
 

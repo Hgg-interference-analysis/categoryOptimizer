@@ -15,14 +15,15 @@ import python.helpers.helper_optimize as helper_optimize
 from python.classes.minimizer_class import minimizer
 import python.plotters.plot as plot
 import logging
-import time
+#import time
 
 
 def main():
-    start_time = time.time()
+    
+    #start_time = time.time()
 
     # option management
-    parser = ap.ArgumentParser(description="Diphoton MVA Boundary Optimizer")
+    parser = ap.ArgumentParser(description="Diphoton pT Boundary Optimizer")
 
     parser.add_argument("-i", "--inputFile", required=True,
                         help='input config file containing dataset and tree whose resolution will be the target of the minimization')
@@ -57,25 +58,21 @@ def main():
         return
 
     df_data = pd.concat([df_sig, df_bkg])
+
     # hand the data off the minimizer
     my_minimizer = minimizer(df_data, args.n_bounds, num_tests=args.iters, seed=args.boundaries)
     my_minimizer.run()
 
     opt_bounds = [round(x, 6) for x in my_minimizer.optimal_boundaries]
-    opt_res = 100*round(my_minimizer.res[my_minimizer.minimum], 6)
-    opt_res_err = round(100*my_minimizer.min_unc, 4)
-    opt_sorb = my_minimizer.s_over_root_b
+    opt_min = round(my_minimizer.minimum, 6)
     log_string = f'the optimal boundaries are {opt_bounds}'
     print(log_string)
     logging.info(log_string)
-    log_string = f'The associated resolution is {opt_res} +/- {opt_res_err}'
-    print(log_string)
-    logging.info(log_string)
-    log_string = f'The s.o.r.b. is {round(opt_sorb,3)}'
+    log_string = f'The associated minimum of the loss function is {opt_min}'
     print(log_string)
     logging.info(log_string)
     
-    print("--- time taken = {t:.2f} mins ---".format(t=(time.time() - start_time)/60))
+    #print("--- time taken = {t:.2f} mins ---".format(t=(time.time() - start_time)/60))
 
 
 if __name__ == "__main__":
