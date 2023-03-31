@@ -1,17 +1,6 @@
-# Diphoton MVA Optimizer
+# Diphoton pT Boundary Optimizer
 
-This repository is forked from [Neil Raymond Schroeder / diphoton mva optimizer](https://gitlab.cern.ch/nschroed/diphoton-mva-optimizer). I'm using the the branch "dev_for_hgg_interference" for developements specific to H-->gamma gamma interference analysis.
-
-This framework derives the optimal diphoton MVA boundaries
-
-## Motivation
-
-Something similar was built in spring 2019, but is now outdated. This is an updated more efficient version using python.  
-The purpose of this software is to derive the optimal boundaries in the diphoton mva space using the resolution of the diphoton invariant mass as a target.
-
-## To Do
-
-- add multiprocessing for iterations > 100
+This branch is for developements specific to H-->gamma gamma interference analysis. In particular, for optimizing the diphoton pT boundaries. This was achieved by modifying [Neil Raymond Schroeder / diphoton mva optimizer](https://gitlab.cern.ch/nschroed/diphoton-mva-optimizer) framework.
 
 ## Features
 
@@ -26,6 +15,8 @@ python -m pip install scipy
 ```
 
 PS: I used CERNBox and SWAN to work on this project. If you wish to do the same, follow the instructions given [here](https://swan.docs.cern.ch/swan/create_proj/) to create a SWAN project from this repository. Then you can use the SWAN terminal to run the framework.
+
+One could also follow the instructions given [here](https://gitlab.cern.ch/bmarzocc/diphoton-mva-optimizer/-/tree/dev_for_hgg_interference/#installation) to setup a conda environment on lxplus to install this framework.
 
 ## Getting Started
 
@@ -61,8 +52,4 @@ The options are as follows:
 - `--plot`: makes a stack plot (will add boundaries if provided)
 - `--boundaries`,`-b`: list (separation is 1 space) of boundaries to use as the initial set (or to plot if `--plot` is provided)
 - `--log`: path to the log file that will be the output of this framework. 
-
-
-## Credit
-This framework was developed by Neil Schroeder (University of Minnesota) and is documented in meetings for the Higgs to gamma gamma group.
 
