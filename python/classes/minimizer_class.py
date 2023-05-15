@@ -81,6 +81,7 @@ class minimizer:
         self.weights = self.weights[sorter]
         self.mva = self.mva[sorter]
         self.sig_bkg = self.sig_bkg[sorter]
+        self.pt = self.pt[sorter]
 
     def update_bounds(self):
         """ updates the rectangular bounds on the boundary locations """
@@ -106,7 +107,7 @@ class minimizer:
             lower = self.boundaries[i]
             upper = self.boundaries[i+1] if i+1 < len(self.boundaries) else self.max_pt
             mask = np.logical_and(lower <= self.pt, self.pt < upper)
-            self.cats.append(mva_category(self.mass[mask], 
+            self.cats.append(mva_category(lower, upper, self.mass[mask], 
                                 self.weights[mask], 
                                 self.sig_bkg[mask], 
                     )
@@ -140,7 +141,7 @@ class minimizer:
   
         ret = 999
         if lfunc != 0 and not np.isnan(lfunc):
-            ret = lfunc   
+            ret = 100*lfunc   
         
         return ret
 
@@ -174,7 +175,8 @@ class minimizer:
         optimum = minimize(self.target_for_pt_opt,
                            self.boundaries,
                            method='Nelder-Mead', # uses a greedy algorithm, it's good to run this many times to find the minimum
-                           bounds=self.bounds      
+                           bounds=self.bounds,  
+                           tol=1e-5   
                            )
         
         if np.isnan(optimum.fun):
@@ -197,14 +199,15 @@ class minimizer:
                 self.boundaries = self.seed
             else:
                 self.boundaries = []
-                self.boundaries = [rand.uniform(self.min_pt, self.max_pt) for i in range(self.num_cats)]
+                self.boundaries = [rand.uniform(self.min_pt, 150) for i in range(self.num_cats)]   #restricted the initial guess to not go over 110 \
+                                                                                                   #(very less events and no intereference effects after that).
                 self.boundaries.sort()
                
             # update the bounds based on the current boundaries
             #self.update_bounds()
             self.bounds = []
-            for i in range(self.num_cats):
-                self.bounds.append((15,300))      ## fixed bounds for each boundary
+            for n in range(self.num_cats):
+                self.bounds.append((15,250))      ## fixed bounds for each boundary
                 
             # optimize the current boundaries
             #fun, val, val_unc, optimum, s_over_root_b = self.optimize_boundaries()
@@ -212,24 +215,31 @@ class minimizer:
 
             # if the current boundaries outperformed the last boundaries, make a note of it
             if (fun < self.minimum) and fun != 999:
-                optimum.sort()
+                #optimum.sort()
                 #logging.info(f' iter{i}: {100*round(val,6)} +/- {100*round(val_unc,6)}, {round(s_over_root_b,3)}, {optimum}, {fun}')
                 self.optimal_boundaries = optimum.copy()
                 self.minimum = fun
+                logging.info(f'{optimum,4}, {fun}')
                 print ("minimum = ", self.minimum)
                 logging.info(f' iter{i}:')
                 for i,cat in enumerate(self.cats):
                     print("cat {}".format(i))
-                    print("s.o.r.b = ", cat.sorb )
-                    print("total no. of events = ", cat.nEvents)
-                    print("no. of signal events = ", cat.nSig)
-                    print("no. of bkg events = ", cat.nBkg)
+                    print("s.o.r.b = ", round(cat.sorb, 4) )
+                    print("lower boundary = ", round(cat.lower_boundary, 4))
+                    print("upper boundary = ", round(cat.upper_boundary, 4))
+
+                    mask = np.logical_and(cat.lower_boundary <= self.pt, self.pt < cat.upper_boundary)
+                    nSig = sum(self.weights[mask & self.sig_bkg])
+                    print("total no. of events = ", round(cat.nEvents, 1))
+                    print("no. of signal events = ", round(nSig, 1))
+                    print("no. of bkg events = ", round(cat.nBkg, 1))
                     resolution = np.sqrt(cat.variance) / cat.mean
                     res_unc = resolution * np.sqrt((cat.err_mean/cat.mean)**2 
                                 + (np.sqrt(cat.err_variance)/np.sqrt(cat.variance))**2)
                     print("resolution = ", resolution)
                     print("error in resolution = ", res_unc)
                 
-                    logging.info(f' cat{i}: {round(resolution,6)} +/- {round(res_unc,6)}, {round(cat.sorb,3)}, {optimum}, {fun}')
+                    logging.info(f' cat{i}: {round(resolution,4)} +/- {round(res_unc,4)}, {round(cat.sorb,3)}')
+                
                     
 
