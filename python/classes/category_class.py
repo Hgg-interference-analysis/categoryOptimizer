@@ -7,9 +7,11 @@ MIN_EVENTS = 1000
 class mva_category:
     """ class to describe diphoton mva categories """
 
-    def __init__(self, invmass, weights, is_signal, do_sm=True) -> None:
+    def __init__(self, lower, upper, invmass, weights, is_signal, do_sm=True) -> None:
 
         self.invalid = False
+        self.lower_boundary = lower
+        self.upper_boundary = upper
         self.nEvents = sum(weights)
         self.nSig = sum(weights[is_signal])
         self.nBkg =  sum(weights[np.logical_not(is_signal)])
