@@ -1,7 +1,8 @@
+
 import matplotlib.pyplot as plt
 import numpy as np
 
-MIN_EVENTS = 500
+MIN_EVENTS = 0.1
 
 class mva_category:
     """ class to describe diphoton mva categories """
@@ -16,16 +17,16 @@ class mva_category:
         self.nBkg =  sum(weights[np.logical_not(is_signal)])
         self.nSigEvnts = len(weights[is_signal])
         self.nBkgEvnts = len(weights[np.logical_not(is_signal)])
-        
+
         # check if category is valid
         #if sum(weights) < MIN_EVENTS:
         if self.nSig < MIN_EVENTS:
             self.set_invalid()
             return
-        
+
         # calculate the interquartile range of the signal
         self.range = self.weighted_quantile(invmass[is_signal], weights[is_signal], 0.683)
-       
+
         # check if the range is valid
         if len(self.range) == 0:
             self.set_invalid()
@@ -39,14 +40,15 @@ class mva_category:
             self.set_invalid()
             return
 
-        # calculate signal and background yields for s.o.r.b.              
+
+        # calculate signal and background for s.o.r.b.
         signal_weights = weights[np.logical_and(is_signal, mask)]
         bkg_weights = weights[np.logical_and(np.logical_not(is_signal), mask)]
         if len(bkg_weights) > 0:
             self.sig = np.sum(signal_weights)
             self.bkg = np.sum(bkg_weights)
             self.sorb_2 = 2*((self.sig + self.bkg)*np.log(1+(self.sig/self.bkg)) - self.sig )
-            self.sorb =  np.sqrt(self.sorb_2)           
+            self.sorb =  np.sqrt(self.sorb_2)
         else:
             self.set_invalid()
             return
@@ -55,13 +57,12 @@ class mva_category:
 
 
         if do_sm:
+
             # evaluate statistical properties of events in min interval range
-            self.mean = np.average(invmass[mask], weights=weights[mask])     #better to use median instead of mean?
-            #self.median = np.median(invmass[mask])
+            self.mean = np.average(invmass[mask], weights=weights[mask])
             self.variance = np.average(np.power((invmass[mask] - self.mean), 2), weights=weights[mask])
             self.err_mean = np.sqrt(self.variance)/np.sum(mask)
             self.err_variance = self.get_err_variance(invmass[mask], weights[mask])
-            
 
     def get_err_variance(self, x, w):
         """ uncertainty on variance is (m4 - m2^2) / (4 n m2)"""

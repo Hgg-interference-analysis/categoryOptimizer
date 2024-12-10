@@ -13,13 +13,14 @@ from python.classes.category_class import mva_category
 class minimizer:
 
     def __init__(self, data, num_cats, num_tests=10, seed=None) -> None:
-        self.mva = np.array(data['diphoMVANew'].values)  
-        self.pt = np.array(data['pt'].values)                    
+        #self.mva = np.array(data['diphoton_transformedMva'].values)  
+        self.mva = np.concatenate([data['diphoton_mva'].dropna().values, data['diphoton_transformedMva'].dropna().values])
+        self.pt = np.array(data['diphoton_pt'].values)                    
         self.mass = np.array(data['CMS_hgg_mass'].values)
         self.weights = np.array(data['weight'].values)
         self.sig_bkg = np.array(data['is_signal'].values)
         mass_mask = np.logical_and(115 < self.mass, self.mass < 135)  
-        mva_mask =  self.mva > -0.405 
+        mva_mask =  self.mva > 0.6 
         self.mass = self.mass[mass_mask & mva_mask]
         self.mva = self.mva[mass_mask & mva_mask]
         self.pt = self.pt[mass_mask & mva_mask]
@@ -43,7 +44,7 @@ class minimizer:
         self.seed = seed
         self.first = True
         self.sort_data()
-
+        self.count = 0
     
     def get_combined_resolution(self):
         """ returns the combined resolution """
@@ -117,7 +118,6 @@ class minimizer:
     def target_for_pt_opt(self, boundaries):
         """ target function to minimize (for diphoton pT boundary optimization)"""
         self.boundaries = boundaries 
-        #print("Boundaries :", self.boundaries)
         self.create_categories(use_bounds=True)
         lfunc = 0
 
@@ -139,14 +139,19 @@ class minimizer:
             s_o_r_b = cat.sorb
             lfunc += (res / s_o_r_b)
   
+        #print(lfunc)
         ret = 999
         if lfunc != 0 and not np.isnan(lfunc):
             ret = 100*lfunc   
         
+        #print(ret)
         return ret
 
+    #def callback_func(x):
+    #    if self.count_nan >= 10:
+    #        return True
 
-
+    
     def target(self, boundaries):
         """ target function to minimize (for diphoton MVA score boundary optimization)"""
         # assign and sort the boundaries, and create the categories
@@ -171,12 +176,12 @@ class minimizer:
 
     def optimize_boundaries(self):
         """ optimizes the location of the boundaries by minimizing the target function """
-        
         optimum = minimize(self.target_for_pt_opt,
                            self.boundaries,
                            method='Nelder-Mead', # uses a greedy algorithm, it's good to run this many times to find the minimum
-                           bounds=self.bounds,  
-                           tol=1e-5   
+                           bounds=self.bounds, 
+                           tol=1e-4, 
+                           options={'fatol': 1e-4} 
                            )
         
         if np.isnan(optimum.fun):
@@ -199,15 +204,22 @@ class minimizer:
                 self.boundaries = self.seed
             else:
                 self.boundaries = []
-                self.boundaries = [rand.uniform(self.min_pt, 150) for i in range(self.num_cats)]   #restricted the initial guess to not go over 110 \
+                self.boundaries = [round(rand.uniform(self.min_pt, 110),0) for i in range(self.num_cats)]   #restricted the initial guess to not go over 110 \
                                                                                                    #(very less events and no intereference effects after that).
                 self.boundaries.sort()
-               
+            invalid_ = False
+            #print("Boundaries :", self.boundaries)
+            for k in range(len(self.boundaries) - 1):
+                if self.boundaries[k+1] - self.boundaries[k] < 10:
+                    invalid_ = True
+            if invalid_:
+                self.count+=1
+                continue 
             # update the bounds based on the current boundaries
             #self.update_bounds()
             self.bounds = []
             for n in range(self.num_cats):
-                self.bounds.append((15,250))      ## fixed bounds for each boundary
+                self.bounds.append((15,115))      ## fixed bounds for each boundary
                 
             # optimize the current boundaries
             #fun, val, val_unc, optimum, s_over_root_b = self.optimize_boundaries()
@@ -219,27 +231,26 @@ class minimizer:
                 #logging.info(f' iter{i}: {100*round(val,6)} +/- {100*round(val_unc,6)}, {round(s_over_root_b,3)}, {optimum}, {fun}')
                 self.optimal_boundaries = optimum.copy()
                 self.minimum = fun
-                logging.info(f'{optimum,4}, {fun}')
+                #logging.info(f'{optimum,4}, {fun}')
                 print ("minimum = ", self.minimum)
-                logging.info(f' iter{i}:')
-                for i,cat in enumerate(self.cats):
-                    print("cat {}".format(i))
+                logging.info(' iter{}:'.format(i))
+                for j,cat in enumerate(self.cats):
+                    print("cat {}".format(j))
                     print("s.o.r.b = ", round(cat.sorb, 4) )
                     print("lower boundary = ", round(cat.lower_boundary, 4))
                     print("upper boundary = ", round(cat.upper_boundary, 4))
-
-                    mask = np.logical_and(cat.lower_boundary <= self.pt, self.pt < cat.upper_boundary)
-                    nSig = sum(self.weights[mask & self.sig_bkg])
                     print("total no. of events = ", round(cat.nEvents, 1))
-                    print("no. of signal events = ", round(nSig, 1))
+                    print("no. of signal events = ", round(cat.nSig, 1))
                     print("no. of bkg events = ", round(cat.nBkg, 1))
+                    print("sig statistics = ", round(cat.nSigEvnts, 1))
+                    print("bkg statistics = ", round(cat.nBkgEvnts, 1))
                     resolution = np.sqrt(cat.variance) / cat.mean
                     res_unc = resolution * np.sqrt((cat.err_mean/cat.mean)**2 
                                 + (np.sqrt(cat.err_variance)/np.sqrt(cat.variance))**2)
-                    print("resolution = ", resolution)
-                    print("error in resolution = ", res_unc)
+                    print("resolution = ", round(resolution, 6))
+                    print("error in resolution = ", round(res_unc, 6))
                 
-                    logging.info(f' cat{i}: {round(resolution,4)} +/- {round(res_unc,4)}, {round(cat.sorb,3)}')
+                    logging.info('cat{}: {} +/- {}, {}'.format(j, round(resolution, 4), round(res_unc, 6), round(cat.sorb, 3)))
                 
                     
 

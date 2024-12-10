@@ -12,15 +12,18 @@ import pandas as pd
 import sys
 
 import python.helpers.helper_optimize as helper_optimize
-from python.classes.minimizer_class_mva import minimizer
+from python.classes.minimizer_class import minimizer
 import python.plotters.plot as plot
 import logging
+#import time
 
 
 def main():
+    
+    #start_time = time.time()
 
     # option management
-    parser = ap.ArgumentParser(description="Diphoton MVA Boundary Optimizer")
+    parser = ap.ArgumentParser(description="Diphoton pT Boundary Optimizer")
 
     parser.add_argument("-i", "--inputFile", required=True,
                         help='input config file containing dataset and tree whose resolution will be the target of the minimization')
@@ -40,12 +43,10 @@ def main():
                         help='plots variables for each file')
     parser.add_argument("--plot", default=False, action='store_true',
                         help='makes the stack plots')
-    parser.add_argument("-b", "--boundaries", type=float, default=[], nargs="*", 
+    parser.add_argument("-b", "--boundaries", type=float, default=[], nargs="*",  
                         help="Adds boundaries to the stack plot")
     parser.add_argument("--log", type=str, default=None, required=True,
                         help="name for log file")
-    parser.add_argument("--pt-range", default=None, type=float, dest='pt_range', nargs="*", 
-                        help="diphoton pT range: provide lower and upper limit, respectively.")
     args = parser.parse_args()
 
     logging.basicConfig(filename=args.log, level='INFO')
@@ -57,25 +58,22 @@ def main():
         return
 
     df_data = pd.concat([df_sig, df_bkg])
+
     # hand the data off the minimizer
-    my_minimizer = minimizer(df_data, args.n_bounds, args.pt_range, num_tests=args.iters, seed=args.boundaries)
+    my_minimizer = minimizer(df_data, args.n_bounds, num_tests=args.iters, seed=args.boundaries)
     my_minimizer.run()
 
-    opt_bounds = [round(x, 6) for x in my_minimizer.optimal_boundaries]
+    opt_bounds = [round(x, 2) for x in my_minimizer.optimal_boundaries]
     opt_min = round(my_minimizer.minimum, 4)
-    #opt_res = 100*round(my_minimizer.res[my_minimizer.minimum], 6)
-    #opt_res_err = round(100*my_minimizer.min_unc, 4)
-    #opt_sorb = my_minimizer.s_over_root_b
-    log_string = f'the optimal boundaries are {opt_bounds}'
+    log_string = 'The optimal boundaries are {}'.format(opt_bounds)
     print(log_string)
     logging.info(log_string)
     log_string = 'The associated minimum of the loss function is {}'.format(opt_min)
     print(log_string)
     logging.info(log_string)
-    #log_string = f'The associated resolution is {opt_res} +/- {opt_res_err}'
-    #logging.info(log_string)
-    #log_string = f'The s.o.r.b. is {round(opt_sorb,3)}'
-    #logging.info(log_string)
+    print('failed iterations = {}'.format(my_minimizer.count) )
+    
+    #print("--- time taken = {t:.2f} mins ---".format(t=(time.time() - start_time)/60))
 
 
 if __name__ == "__main__":
